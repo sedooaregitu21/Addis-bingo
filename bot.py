@@ -4,7 +4,7 @@ import random
 import time
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-TOKEN = "8944140702:AAH7lpwfvrYuCPiCBwLc3cll7VMhU_YiYHg"
+TOKEN = "8944140702:AAHRQf4NUsJG5VJ87Q2tLXLsQdf9RwYDzz0"
 bot = telebot.TeleBot(TOKEN)
 
 def init_db():
