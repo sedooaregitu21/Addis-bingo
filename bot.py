@@ -5,9 +5,13 @@ import time
 import os
 from gtts import gTTS
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-8944140702:AAHRQf4NUsJG5VJ87Q2tLXLsQdf9RwYDzz0"
-TOKEN = "
+
+# አዲሱ TOKEN
+TOKEN = "8944140702:AAHRQf4NUsJG5VJ87Q2tLXLsQdf9RwYDzz0"
 bot = telebot.TeleBot(TOKEN)
+
+# 📌 የራስህን ቻናል Username እዚህ ጋር ቀይር (ቦቱን በቻናልህ Admin አድርገው)
+CHANNEL_USERNAME = "@YourChannelUsername" 
 
 def init_db():
     conn = sqlite3.connect("bingo_users.db")
@@ -23,6 +27,19 @@ def init_db():
     """)
     conn.commit()
     conn.close()
+
+# ተጫዋቹ ቻናሉን ይቀላቀለ እንደሆነ የሚያረጋግጥ ፈንክሽን
+def is_user_joined(user_id):
+    if CHANNEL_USERNAME == "@YourChannelUsername":
+        return True  # ቻናል ካልቀየርክ ፍቃድ ይሰጣል
+    try:
+        member = bot.get_chat_member(CHANNEL_USERNAME, user_id)
+        if member.status in ['creator', 'administrator', 'member']:
+            return True
+        return False
+    except Exception as e:
+        print(f"Channel Check Error: {e}")
+        return True
 
 def main_keyboard():
     markup = InlineKeyboardMarkup()
@@ -40,6 +57,14 @@ def send_welcome(message):
     user_id = message.from_user.id
     username = message.from_user.username or "N/A"
     full_name = message.from_user.first_name
+
+    # ቻናል መከተላቸውን ማረጋገጥ
+    if not is_user_joined(user_id):
+        join_btn = InlineKeyboardMarkup()
+        join_btn.add(InlineKeyboardButton("📢 ቻናላችንን ይቀላቀሉ", url=f"https://t.me/{CHANNEL_USERNAME.replace('@', '')}"))
+        join_btn.add(InlineKeyboardButton("✅ ተቀላቅያለሁ / Verify", callback_data="check_join"))
+        bot.reply_to(message, f"🚀 ቦቱን ለመጠቀም እባክዎን አስቀድመው የቴሌግራም ቻናላችንን ይቀላቀሉ፦\n\n{CHANNEL_USERNAME}", reply_markup=join_btn)
+        return
 
     conn = sqlite3.connect("bingo_users.db")
     cursor = conn.cursor()
@@ -69,20 +94,16 @@ def generate_bingo_card():
     card_str += f" | {card[12]:02d} | {card[13]:02d} | {card[14]:02d} |\n"
     return card_str
 
-# ቁጥሩን ወደ ድምጽ ፋይል (Voice Note) የሚቀይር ፈንክሽን
 def send_number_voice(chat_id, num):
     try:
         text_to_speak = str(num)
-        # gTTS ಬಳክ ድምጽ እናዘጋጃለን (በእንግሊዝኛ ድምጽ ቁጥሩን እንዲጠራው ማድረግ ይቻላል)
         tts = gTTS(text=text_to_speak, lang='en', slow=False)
         voice_filename = f"voice_{num}.ogg"
         tts.save(voice_filename)
         
-        # ቴሌግራም ላይ እንደ ቮይስ መልእክት (Voice Message) እንልካለን
         with open(voice_filename, 'rb') as audio:
             bot.send_voice(chat_id, audio)
             
-        # የተላከውን ፋይል ከኮምፒዩተር/ሰርቨር እናጠፋዋለን (Disk space ለመቆጠብ)
         if os.path.exists(voice_filename):
             os.remove(voice_filename)
     except Exception as e:
@@ -93,6 +114,14 @@ def send_number_voice(chat_id, num):
 def callback_listener(call):
     user_id = call.from_user.id
     chat_id = call.message.chat.id
+
+    if call.data == "check_join":
+        if is_user_joined(user_id):
+            bot.answer_callback_query(call.id, "✅ ማረጋገጡ ተጠናቋል! እንኳን ደህና መጡ።", show_alert=True)
+            bot.send_message(chat_id, "🎮 ለመጫወት ከታች ካሉት አዝራሮች ይምረጡ፦", reply_markup=main_keyboard())
+        else:
+            bot.answer_callback_query(call.id, "❌ አሁንም ቻናሉን አልተቀላቀሉም! እባክዎን አስቀድመው Join ያድርጉ።", show_alert=True)
+        return
     
     conn = sqlite3.connect("bingo_users.db")
     cursor = conn.cursor()
@@ -140,7 +169,6 @@ def callback_listener(call):
             called_numbers = random.sample(range(1, 76), 5)
             for num in called_numbers:
                 time.sleep(2)
-                # ቁጥሩን በድምጽ (Voice Note) እንዲጠራው ይህንን እንጠራለን
                 send_number_voice(chat_id, num)
 
             time.sleep(2)
@@ -162,5 +190,5 @@ def callback_listener(call):
 
 if __name__ == "__main__":
     init_db()
-    print("Ashenafi Bingo ቦቱ በድምጽ (Voice) አሰራር መስራት ጀምሯል...")
+    print("Ashenafi Bingo ቦቱ በአዲሱ ቶከን አሰራሩን ጀምሯል...")
     bot.infinity_polling()
