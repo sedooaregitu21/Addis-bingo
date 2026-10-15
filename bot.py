@@ -10,8 +10,8 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 TOKEN = "8944140702:AAHRQf4NUsJG5VJ87Q2tLXLsQdf9RwYDzz0"
 bot = telebot.TeleBot(TOKEN)
 
-# 📌 የቴሌግራም ቻናል Username (ቻናል ከሌለህ ወይም ማስገደድ ካልፈለግህ እንደዚሁ ተወው)
-CHANNEL_USERNAME = "@YourChannelUsername" 
+# 📌 የቴሌግራም ቻናልህ Username
+CHANNEL_USERNAME = "@sedoobingo" 
 
 def init_db():
     conn = sqlite3.connect("bingo_users.db")
@@ -28,6 +28,7 @@ def init_db():
     conn.commit()
     conn.close()
 
+# ተጫዋቹ ቻናሉን ይቀላቀለ እንደሆነ የሚያረጋግጥ ፈንክሽን
 def is_user_joined(user_id):
     if CHANNEL_USERNAME == "@YourChannelUsername":
         return True
@@ -57,6 +58,7 @@ def send_welcome(message):
     username = message.from_user.username or "N/A"
     full_name = message.from_user.first_name
 
+    # ቻናል መከተላቸውን ማረጋገጥ
     if not is_user_joined(user_id):
         join_btn = InlineKeyboardMarkup()
         join_btn.add(InlineKeyboardButton("📢 ቻናላችንን ይቀላቀሉ", url=f"https://t.me/{CHANNEL_USERNAME.replace('@', '')}"))
@@ -82,11 +84,12 @@ def send_welcome(message):
     conn.close()
     bot.reply_to(message, response_msg, parse_mode="HTML", reply_markup=main_keyboard())
 
+# ትክክለኛ B-I-N-G-O ካርቴላ ማዘጋጃ
 def generate_bingo_card():
     col_b = random.sample(range(1, 16), 5)
     col_i = random.sample(range(16, 31), 5)
     col_n = random.sample(range(31, 46), 5)
-    col_n[2] = "⭐"
+    col_n[2] = "⭐"  # መሀል ላይ ፍሪ ስፔስ
     col_g = random.sample(range(46, 61), 5)
     col_o = random.sample(range(61, 76), 5)
 
@@ -98,6 +101,7 @@ def generate_bingo_card():
     
     return card_str
 
+# ቁጥሩን በድምጽ (Voice Note) መላኪያ
 def send_number_voice(chat_id, num):
     try:
         text_to_speak = str(num)
@@ -124,7 +128,7 @@ def callback_listener(call):
             bot.answer_callback_query(call.id, "✅ ማረጋገጡ ተጠናቋል! እንኳን ደህና መጡ።", show_alert=True)
             bot.send_message(chat_id, "🎮 ለመጫወት ከታች ካሉት አዝራሮች ይምረጡ፦", reply_markup=main_keyboard())
         else:
-            bot.answer_callback_query(call.id, "❌ አሁንም ቻናሉን አልተቀላቀሉም!", show_alert=True)
+            bot.answer_callback_query(call.id, "❌ አሁንም ቻናሉን አልተቀላቀሉም! እባክዎን አስቀድመው Join ያድርጉ።", show_alert=True)
         return
     
     conn = sqlite3.connect("bingo_users.db")
@@ -140,10 +144,16 @@ def callback_listener(call):
 
     elif call.data == "deposit":
         deposit_text = (
-            "💳 <b>የSEDOO BINGO የባንክ አማራጮች፦</b>\n\n"
+            "💳 <b>የSEDOO BINGO የባንክ አማራጮች፦</b>\n"
+            "<i>(Tap to copy)</i>👇👇👇\n\n"
             "Tele birr: <code>0985177839</code>\n"
             "CBE: <code>1000745390448</code>\n"
-            "BOA: <code>92707617</code>\n\n"
+            "BOA: <code>92707617</code>\n"
+            "Amhara Bank: <code>9900039885356</code>\n"
+            "Tsedey Bank: 0544470000669\n"
+            "Abay Bank: 4151013046984015\n"
+            "Hibret Bank: 2710415626399014\n"
+            "Awash Bank: 014251726692000\n\n"
             "📌 ክፍያ ከፈፀሙ በኋላ ደረሰኙን ለአድሚን ይላኩ።"
         )
         bot.send_message(chat_id, deposit_text, parse_mode="HTML")
@@ -171,10 +181,10 @@ def callback_listener(call):
                 send_number_voice(chat_id, num)
 
             time.sleep(2)
-            bot.send_message(chat_id, "🎉 <b>የዚህ ዙር ጨዋታ ተጠናቋል!</b>", parse_mode="HTML", reply_markup=main_keyboard())
+            bot.send_message(chat_id, "🎉 <b>የዚህ ዙር ጨዋታ ተጠናቋል!</b>\n\nእንደገና ለመጫወት ከታች ያለውን አዝራር ይጫኑ።", parse_mode="HTML", reply_markup=main_keyboard())
 
         else:
-            bot.answer_callback_query(call.id, "❌ በቂ ቀሪ ሂሳብ የለዎትም!", show_alert=True)
+            bot.answer_callback_query(call.id, "❌ በቂ ቀሪ ሂሳብ የለዎትም! እባክዎን ሂሳብ ይሙሉ/ዴፖዚት ያድርጉ።", show_alert=True)
 
     elif call.data == "bonus":
         if has_claimed == 0:
@@ -183,7 +193,7 @@ def callback_listener(call):
             conn.commit()
             bot.answer_callback_query(call.id, "🎉 የ 10 ብር ቦነስ ተጨምሮልዎታል!", show_alert=True)
         else:
-            bot.answer_callback_query(call.id, "❌ ቦነስ የወሰዱት አንድ ጊዜ ብቻ ነው!", show_alert=True)
+            bot.answer_callback_query(call.id, "❌ ቦነስ የወሰዱት አንድ ጊዜ ብቻ ነው! ቀድመው ወስደዋል።", show_alert=True)
 
     conn.close()
 
