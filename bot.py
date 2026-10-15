@@ -6,11 +6,11 @@ import os
 from gtts import gTTS
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# አዲሱ TOKEN
+# የቦት ቶከን
 TOKEN = "8944140702:AAHRQf4NUsJG5VJ87Q2tLXLsQdf9RwYDzz0"
 bot = telebot.TeleBot(TOKEN)
 
-# 📌 የራስህን ቻናል Username እዚህ ጋር ቀይር (ቦቱን በቻናልህ Admin አድርገው)
+# 📌 የቴሌግራም ቻናል Username (ቻናል ከሌለህ ወይም ማስገደድ ካልፈለግህ እንደዚሁ ተወው)
 CHANNEL_USERNAME = "@YourChannelUsername" 
 
 def init_db():
@@ -28,10 +28,9 @@ def init_db():
     conn.commit()
     conn.close()
 
-# ተጫዋቹ ቻናሉን ይቀላቀለ እንደሆነ የሚያረጋግጥ ፈንክሽን
 def is_user_joined(user_id):
     if CHANNEL_USERNAME == "@YourChannelUsername":
-        return True  # ቻናል ካልቀየርክ ፍቃድ ይሰጣል
+        return True
     try:
         member = bot.get_chat_member(CHANNEL_USERNAME, user_id)
         if member.status in ['creator', 'administrator', 'member']:
@@ -58,12 +57,11 @@ def send_welcome(message):
     username = message.from_user.username or "N/A"
     full_name = message.from_user.first_name
 
-    # ቻናል መከተላቸውን ማረጋገጥ
     if not is_user_joined(user_id):
         join_btn = InlineKeyboardMarkup()
         join_btn.add(InlineKeyboardButton("📢 ቻናላችንን ይቀላቀሉ", url=f"https://t.me/{CHANNEL_USERNAME.replace('@', '')}"))
         join_btn.add(InlineKeyboardButton("✅ ተቀላቅያለሁ / Verify", callback_data="check_join"))
-        bot.reply_to(message, f"🚀 ቦቱን ለመጠቀም እባክዎን አስቀድመው የቴሌግራም ቻናላችንን ይቀላቀሉ፦\n\n{CHANNEL_USERNAME}", reply_markup=join_btn)
+        bot.reply_to(message, f"🚀 ቦቱን ለመጠቀም እባክዎን አስቀድመው ቻናላችንን ይቀላቀሉ፦\n\n{CHANNEL_USERNAME}", reply_markup=join_btn)
         return
 
     conn = sqlite3.connect("bingo_users.db")
@@ -77,21 +75,27 @@ def send_welcome(message):
             (user_id, username, full_name, 10.0)
         )
         conn.commit()
-        response_msg = f"🎉 እንኳን ደህና መጡ ወደ <b>ASHENAFI BINGO</b> {full_name}!\n\nለማስጀመር <b>10 ብር ቦነስ</b> ተሰጥቶዎታል።\n\nለመጫወት ከታች ካሉት አዝራሮች አንዱን ይምረጡ፦"
+        response_msg = f"🎉 እንኳን ደህና መጡ ወደ <b>SEDOO BINGO</b> {full_name}!\n\nለማስጀመር <b>10 ብር ቦነስ</b> ተሰጥቶዎታል።\n\nለመጫወት ከታች ካሉት አዝራሮች አንዱን ይምረጡ፦"
     else:
-        response_msg = f"ሰላም <b>{full_name}</b>! እንኳን ደህና መጡ ወደ <b>ASHENAFI BINGO</b>።\n\nለመጫወት ከታች ካሉት አዝራሮች አንዱን ይምረጡ፦"
+        response_msg = f"ሰላም <b>{full_name}</b>! እንኳን ደህና መጡ ወደ <b>SEDOO BINGO</b>።\n\nለመጫወት ከታች ካሉት አዝራሮች አንዱን ይምረጡ፦"
 
     conn.close()
     bot.reply_to(message, response_msg, parse_mode="HTML", reply_markup=main_keyboard())
 
 def generate_bingo_card():
-    card = random.sample(range(1, 76), 15)
-    card_str = "🎰 <b>የእርስዎ የ ASHENAFI BINGO ካርቴላ</b> 🎰\n\n"
-    card_str += f" | {card[0]:02d} | {card[1]:02d} | {card[2]:02d} |\n"
-    card_str += f" | {card[3]:02d} | {card[4]:02d} | {card[5]:02d} |\n"
-    card_str += f" | {card[6]:02d} | {card[7]:02d} | {card[8]:02d} |\n"
-    card_str += f" | {card[9]:02d} | {card[10]:02d} | {card[11]:02d} |\n"
-    card_str += f" | {card[12]:02d} | {card[13]:02d} | {card[14]:02d} |\n"
+    col_b = random.sample(range(1, 16), 5)
+    col_i = random.sample(range(16, 31), 5)
+    col_n = random.sample(range(31, 46), 5)
+    col_n[2] = "⭐"
+    col_g = random.sample(range(46, 61), 5)
+    col_o = random.sample(range(61, 76), 5)
+
+    card_str = "🎰 <b>SEDOO BINGO - CARTELA</b> 🎰\n\n"
+    card_str += "<code> B   I   N   G   O </code>\n"
+    for r in range(5):
+        n_val = f"{col_n[r]:02d}" if col_n[r] != "⭐" else " ⭐ "
+        card_str += f"<code>{col_b[r]:02d} | {col_i[r]:02d} | {n_val} | {col_g[r]:02d} | {col_o[r]:02d}</code>\n"
+    
     return card_str
 
 def send_number_voice(chat_id, num):
@@ -120,7 +124,7 @@ def callback_listener(call):
             bot.answer_callback_query(call.id, "✅ ማረጋገጡ ተጠናቋል! እንኳን ደህና መጡ።", show_alert=True)
             bot.send_message(chat_id, "🎮 ለመጫወት ከታች ካሉት አዝራሮች ይምረጡ፦", reply_markup=main_keyboard())
         else:
-            bot.answer_callback_query(call.id, "❌ አሁንም ቻናሉን አልተቀላቀሉም! እባክዎን አስቀድመው Join ያድርጉ።", show_alert=True)
+            bot.answer_callback_query(call.id, "❌ አሁንም ቻናሉን አልተቀላቀሉም!", show_alert=True)
         return
     
     conn = sqlite3.connect("bingo_users.db")
@@ -136,16 +140,10 @@ def callback_listener(call):
 
     elif call.data == "deposit":
         deposit_text = (
-            "💳 <b>የASHENAFI BINGO የባንክ አማራጮች፦</b>\n"
-            "<i>(Tap to copy)</i>👇👇👇\n\n"
+            "💳 <b>የSEDOO BINGO የባንክ አማራጮች፦</b>\n\n"
             "Tele birr: <code>0985177839</code>\n"
             "CBE: <code>1000745390448</code>\n"
-            "BOA: <code>92707617</code>\n"
-            "Amhara Bank: <code>9900039885356</code>\n"
-            "Tsedey Bank: 0544470000669\n"
-            "Abay Bank: 4151013046984015\n"
-            "Hibret Bank: 2710415626399014\n"
-            "Awash Bank: 014251726692000\n\n"
+            "BOA: <code>92707617</code>\n\n"
             "📌 ክፍያ ከፈፀሙ በኋላ ደረሰኙን ለአድሚን ይላኩ።"
         )
         bot.send_message(chat_id, deposit_text, parse_mode="HTML")
@@ -156,8 +154,9 @@ def callback_listener(call):
             cursor.execute("UPDATE users SET balance = ? WHERE user_id = ?", (new_balance, user_id))
             conn.commit()
             
+            game_id = random.randint(800, 999)
             bot.answer_callback_query(call.id, "10 ብር ከሂሳብዎ ተቀንሷል።")
-            bot.send_message(chat_id, "🎯 <b>በ 10 ብር ጨዋታ ተመዝግበዋል!</b>\n\nጨዋታው በ 5 ሰከንድ ውስጥ ይጀምራል...", parse_mode="HTML")
+            bot.send_message(chat_id, f"🎯 <b>Game ID: {game_id}</b>\nጨዋታው ተጀምሯል, ካርቴላዎ እየወጣ ነው...", parse_mode="HTML")
             
             time.sleep(3)
             card_text = generate_bingo_card()
@@ -172,10 +171,10 @@ def callback_listener(call):
                 send_number_voice(chat_id, num)
 
             time.sleep(2)
-            bot.send_message(chat_id, "🎉 <b>የዚህ ዙር ጨዋታ ተጠናቋል!</b>\n\nእንደገና ለመጫወት ከታች ያለውን አዝራር ይጫኑ።", parse_mode="HTML", reply_markup=main_keyboard())
+            bot.send_message(chat_id, "🎉 <b>የዚህ ዙር ጨዋታ ተጠናቋል!</b>", parse_mode="HTML", reply_markup=main_keyboard())
 
         else:
-            bot.answer_callback_query(call.id, "❌ በቂ ቀሪ ሂሳብ የለዎትም! እባክዎን ሂሳብ ይሙሉ/ዴፖዚት ያድርጉ።", show_alert=True)
+            bot.answer_callback_query(call.id, "❌ በቂ ቀሪ ሂሳብ የለዎትም!", show_alert=True)
 
     elif call.data == "bonus":
         if has_claimed == 0:
@@ -184,11 +183,11 @@ def callback_listener(call):
             conn.commit()
             bot.answer_callback_query(call.id, "🎉 የ 10 ብር ቦነስ ተጨምሮልዎታል!", show_alert=True)
         else:
-            bot.answer_callback_query(call.id, "❌ ቦነስ የወሰዱት አንድ ጊዜ ብቻ ነው! ቀድመው ወስደዋል።", show_alert=True)
+            bot.answer_callback_query(call.id, "❌ ቦነስ የወሰዱት አንድ ጊዜ ብቻ ነው!", show_alert=True)
 
     conn.close()
 
 if __name__ == "__main__":
     init_db()
-    print("Ashenafi Bingo ቦቱ በአዲሱ ቶከን አሰራሩን ጀምሯል...")
+    print("Sedoo Bingo ቦቱ በሙሉ አሰራር መስራት ጀምሯል...")
     bot.infinity_polling()
