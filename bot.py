@@ -6,8 +6,8 @@ import os
 from gtts import gTTS
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-# የቦት ቶከን
-TOKEN = "8944140702:AAHRQf4NUsJG5VJ87Q2tLXLsQdf9RwYDzz0"
+# 📌 አዲሱን ቶከን እዚህ ጋር አስገባ
+TOKEN = "8944140702:AAEGVXjmueGo7ZoOMRp2KxtexPYCplErTbM"
 bot = telebot.TeleBot(TOKEN)
 
 # 📌 የቴሌግራም ቻናልህ Username
@@ -63,7 +63,7 @@ def send_welcome(message):
         join_btn = InlineKeyboardMarkup()
         join_btn.add(InlineKeyboardButton("📢 ቻናላችንን ይቀላቀሉ", url=f"https://t.me/{CHANNEL_USERNAME.replace('@', '')}"))
         join_btn.add(InlineKeyboardButton("✅ ተቀላቅያለሁ / Verify", callback_data="check_join"))
-        bot.reply_to(message, f"🚀 ቦቱን ለመጠቀም እባክዎን አስቀድመው ቻናላችንን ይቀላቀሉ፦\n\n{CHANNEL_USERNAME}", reply_markup=join_btn)
+        bot.reply_to(message, f"🚀 ቦቱን ለመጠቀም እባክዎን አስቀድመው የቴሌግራም ቻናላችንን ይቀላቀሉ፦\n\n{CHANNEL_USERNAME}", reply_markup=join_btn)
         return
 
     conn = sqlite3.connect("bingo_users.db")
