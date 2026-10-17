@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sedoo Bingo</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #ffffff;
+            margin: 0;
+            padding: 15px;
+            text-align: center;
+        }
+        h2 { color: #f59e0b; }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .card-btn {
+            background-color: #1e293b;
+            border: 2px solid #38bdf8;
+            color: white;
+            padding: 12px 5px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .card-btn:active {
+            background-color: #38bdf8;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <h2>🎯 SEDOO BINGO 🎰</h2>
+    <p>ለመጫወት ከ 1 እስከ 150 ያሉት ካርቴላዎችን ይምረጡ፦</p>
+    
+    <div class="grid-container" id="cardsGrid"></div>
+
+    <script>
+        const grid = document.getElementById('cardsGrid');
+        for (let i = 1; i <= 150; i++) {
+            let btn = document.createElement('button');
+            btn.className = 'card-btn';
+            btn.innerText = 'Card ' + i;
+            btn.onclick = function() {
+                alert('ካርቴላ #' + i + ' መርጠዋል!');
+            };
+            grid.appendChild(btn);
+        }
+        // Telegram Web App ማስነሻ
+        window.Telegram.WebApp.ready();
+    </script>
+</body>
+</html>
