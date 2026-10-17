@@ -21,7 +21,7 @@ def keep_alive():
     t = Thread(target=run_flask)
     t.start()
 
-TOKEN = os.environ.get("BOT_TOKEN", "8944140702:AAF_J8e_saDp1gVtGA-WJC4f0mtu4xFl3DI")
+TOKEN = os.environ.get("BOT_TOKEN","8944140702:AAF_J8e_saDp1gVtGA-WJC4f0mtu4xFl3DI")
 bot = telebot.TeleBot(TOKEN)
 
 CHANNEL_USERNAME = "@sedoobingo" 
