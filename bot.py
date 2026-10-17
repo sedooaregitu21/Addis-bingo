@@ -24,7 +24,7 @@ def keep_alive():
     t.start()
 
 # 📌 2. ቶከኑን ከ Render Environment Variable ማንበብ
-TOKEN = os.environ.get("BOT_TOKEN", "8944140702:AAEvwvINJqTS5sVmVryGPdjx5g6YPNUfx-0")
+TOKEN = os.environ.get("BOT_TOKEN","8944140702:AAEvwvINJqTS5sVmVryGPdjx5g6YPNUfx-0")
 bot = telebot.TeleBot(TOKEN)
 
 # 📌 የቴሌግራም ቻናልህ Username
