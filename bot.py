@@ -3,12 +3,10 @@ import telebot
 import random
 import time
 import os
-from gtts import gTTS
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from flask import Flask, render_template
 from threading import Thread
 
-# 📌 1. Flask Web Server ngam udditde index.html (Mini App)
 app = Flask('', template_folder='.')
 
 @app.route('/')
@@ -23,8 +21,7 @@ def keep_alive():
     t = Thread(target=run_flask)
     t.start()
 
-# 📌 2. Telegram Bot Token
-TOKEN = os.environ.get("BOT_TOKEN","8944140702:AAEvwvINJqTS5sVmVryGPdjx5g6YPNUfx-0 ")
+TOKEN = os.environ.get("BOT_TOKEN", "8944140702:AAF_J8e_saDp1gVtGA-WJC4f0mtu4xFl3DI")
 bot = telebot.TeleBot(TOKEN)
 
 CHANNEL_USERNAME = "@sedoobingo" 
@@ -60,9 +57,9 @@ def main_keyboard():
     markup = InlineKeyboardMarkup()
     markup.row_width = 2
     markup.add(
-        InlineKeyboardButton("💳 Balance", callback_data="balance"),
-        InlineKeyboardButton("📥 Deposit", callback_data="deposit"),
-        InlineKeyboardButton("🎁 Bonus", callback_data="bonus")
+        InlineKeyboardButton("💳 ቀሪ ሂሳብ (Balance)", callback_data="balance"),
+        InlineKeyboardButton("📥 ዴፖዚት (Deposit)", callback_data="deposit"),
+        InlineKeyboardButton("🎁 ቦነስ ይውሰዱ", callback_data="bonus")
     )
     return markup
 
@@ -74,9 +71,9 @@ def send_welcome(message):
 
     if not is_user_joined(user_id):
         join_btn = InlineKeyboardMarkup()
-        join_btn.add(InlineKeyboardButton("📢 Join Channel", url=f"https://t.me/{CHANNEL_USERNAME.replace('@', '')}"))
-        join_btn.add(InlineKeyboardButton("✅ Verify", callback_data="check_join"))
-        bot.reply_to(message, f"🚀 Naatu e channel amen adan:\n\n{CHANNEL_USERNAME}", reply_markup=join_btn)
+        join_btn.add(InlineKeyboardButton("📢 ቻናላችንን ይቀላቀሉ", url=f"https://t.me/{CHANNEL_USERNAME.replace('@', '')}"))
+        join_btn.add(InlineKeyboardButton("✅ ተቀላቅያለሁ / Verify", callback_data="check_join"))
+        bot.reply_to(message, f"🚀 ቦቱን ለመጠቀም እባክዎን አስቀድመው የቴሌግራም ቻናላችንን ይቀላቀሉ፦\n\n{CHANNEL_USERNAME}", reply_markup=join_btn)
         return
 
     conn = sqlite3.connect("bingo_users.db")
@@ -90,9 +87,9 @@ def send_welcome(message):
             (user_id, username, full_name, 10.0)
         )
         conn.commit()
-        response_msg = f"🎉 Bisimillaama <b>SEDOO BINGO</b> {full_name}!\n\nA heɓii <b>10 ETB Bonus</b>."
+        response_msg = f"🎉 እንኳን ደህና መጡ ወደ <b>SEDOO BINGO</b> {full_name}!\n\nለማስጀመር <b>10 ብር ቦነስ</b> ተሰጥቶዎታል።"
     else:
-        response_msg = f"Jam waali <b>{full_name}</b>! Bisimillaama e <b>SEDOO BINGO</b>."
+        response_msg = f"ሰላም <b>{full_name}</b>! እንኳን ደህና መጡ ወደ <b>SEDOO BINGO</b>።"
 
     conn.close()
     bot.reply_to(message, response_msg, parse_mode="HTML", reply_markup=main_keyboard())
@@ -111,11 +108,11 @@ def callback_listener(call):
     has_claimed = res[1] if res else 1
 
     if call.data == "balance":
-        bot.answer_callback_query(call.id, f"Kaalis ma: {balance:.1f} ETB", show_alert=True)
+        bot.answer_callback_query(call.id, f"የእርስዎ ቀሪ ሂሳብ፦ {balance:.1f} ብር ነው", show_alert=True)
 
     elif call.data == "deposit":
         deposit_text = (
-            "💳 <b>SEDOO BINGO Bank Options:</b>\n\n"
+            "💳 <b>የSEDOO BINGO የባንክ አማራጮች፦</b>\n\n"
             "Telebirr: <code>0985177839</code>\n"
             "CBE: <code>1000745390448</code>\n"
         )
@@ -126,14 +123,14 @@ def callback_listener(call):
             new_balance = balance + 10.0
             cursor.execute("UPDATE users SET balance = ?, has_claimed_bonus = 1 WHERE user_id = ?", (new_balance, user_id))
             conn.commit()
-            bot.answer_callback_query(call.id, "🎉 A heɓii 10 ETB bonus!", show_alert=True)
+            bot.answer_callback_query(call.id, "🎉 የ 10 ብር ቦነስ ተጨምሮልዎታል!", show_alert=True)
         else:
-            bot.answer_callback_query(call.id, "❌ A ƴettii bonus ma gila adan!", show_alert=True)
+            bot.answer_callback_query(call.id, "❌ ቦነስ የወሰዱት አንድ ጊዜ ብቻ ነው!", show_alert=True)
 
     conn.close()
 
 if __name__ == "__main__":
     init_db()
     keep_alive()
-    print("Sedoo Bingo Bot ina gollora no feewi...")
+    print("Sedoo Bingo ቦቱ በሙሉ አሰራር መስራት ጀምሯል...")
     bot.infinity_polling()
