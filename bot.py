@@ -214,9 +214,8 @@ def callback_listener(call):
 
     conn.close()
 
-if name == "main":
+if __name__ == "__main__":
     init_db()
-    # 📌 3. ዌብ ሰርቨሩን ማስነሳት
     keep_alive()
     print("Sedoo Bingo ቦቱ በሙሉ አሰራር መስራት ጀምሯል...")
     bot.infinity_polling()
