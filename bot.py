@@ -5,9 +5,26 @@ import time
 import os
 from gtts import gTTS
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
+from flask import Flask
+from threading import Thread
 
-# 📌 አዲሱን ቶከን እዚህ ጋር አስገባ
-TOKEN = "8944140702:AAEGVXjmueGo7ZoOMRp2KxtexPYCplErTbM"
+# 📌 1. የ Render PORT ማታለያ (Flask Web Server)
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Sedoo Bingo Bot is Running Live!"
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    app.run(host='0.0.0.0', port=port)
+
+def keep_alive():
+    t = Thread(target=run_flask)
+    t.start()
+
+# 📌 2. ቶከኑን ከ Render Environment Variable ማንበብ
+TOKEN = os.environ.get("BOT_TOKEN", "8944140702:AAEvwvINJqTS5sVmVryGPdjx5g6YPNUfx-0")
 bot = telebot.TeleBot(TOKEN)
 
 # 📌 የቴሌግራም ቻናልህ Username
@@ -197,7 +214,9 @@ def callback_listener(call):
 
     conn.close()
 
-if __name__ == "__main__":
+if name == "main":
     init_db()
+    # 📌 3. ዌብ ሰርቨሩን ማስነሳት
+    keep_alive()
     print("Sedoo Bingo ቦቱ በሙሉ አሰራር መስራት ጀምሯል...")
     bot.infinity_polling()
