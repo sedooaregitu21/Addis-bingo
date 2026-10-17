@@ -14,12 +14,16 @@
             padding: 15px;
             text-align: center;
         }
-        h2 { color: #f59e0b; }
-        .grid-container {
+        h2 { color: #f59e0b; margin-bottom: 5px; }
+        .sub-title { color: #94a3b8; font-size: 14px; margin-bottom: 15px; }
+        
+        .cards-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 8px;
-            margin-top: 15px;
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 5px;
         }
         .card-btn {
             background-color: #1e293b;
@@ -28,33 +32,204 @@
             padding: 12px 5px;
             border-radius: 8px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             cursor: pointer;
         }
-        .card-btn:active {
-            background-color: #38bdf8;
+
+        #gameScreen {
+            display: none;
+        }
+        .caller-box {
+            background-color: #1e293b;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .called-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #10b981;
+        }
+        
+        .bingo-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            background-color: #1e293b;
+            padding: 10px;
+            border-radius: 12px;
+        }
+        .header-cell {
+            background-color: #f59e0b;
             color: #000;
+            font-weight: bold;
+            padding: 10px 0;
+            border-radius: 6px;
+            font-size: 18px;
+        }
+        .cell {
+            background-color: #334155;
+            border-radius: 6px;
+            padding: 12px 0;
+            font-weight: bold;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cell.marked {
+            background-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 0 10px #10b981;
+        }
+        .cell.free {
+            background-color: #ef4444;
+            color: white;
+        }
+        .back-btn {
+            margin-top: 15px;
+            background-color: #475569;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <h2>🎯 SEDOO BINGO 🎰</h2>
-    <p>ለመጫወት ከ 1 እስከ 150 ያሉት ካርቴላዎችን ይምረጡ፦</p>
-    
-    <div class="grid-container" id="cardsGrid"></div>
+
+    <div id="selectionScreen">
+        <h2>🎯 SEDOO BINGO 🎰</h2>
+        <div class="sub-title">ለመጫወት ከ 1 እስከ 150 ያሉት ካርቴላዎችን ይምረጡ፦</div>
+        <div class="cards-grid" id="cardsGrid"></div>
+    </div>
+
+    <div id="gameScreen">
+        <h3 id="cardTitle">CARTELA #1</h3>
+        
+        <div class="caller-box">
+            <div style="font-size: 12px; color: #94a3b8;">የተጠራው ቁጥር</div>
+            <div class="called-number" id="calledNum">READY!</div>
+        </div>
+
+        <div class="bingo-board" id="bingoBoard"></div>
+
+        <button class="back-btn" onclick="exitGame()">ወደ ካርቴላ መምረጫ ተመለስ</button>
+    </div>
 
     <script>
-        const grid = document.getElementById('cardsGrid');
+        const cardsGrid = document.getElementById('cardsGrid');
+        const selectionScreen = document.getElementById('selectionScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const bingoBoard = document.getElementById('bingoBoard');
+        const calledNumDisplay = document.getElementById('calledNum');
+        const cardTitle = document.getElementById('cardTitle');
+
+        let currentCardNumbers = [];
+        let gameInterval = null;
+
         for (let i = 1; i <= 150; i++) {
             let btn = document.createElement('button');
             btn.className = 'card-btn';
             btn.innerText = 'Card ' + i;
-            btn.onclick = function() {
-                alert('ካርቴላ #' + i + ' መርጠዋል!');
-            };
-            grid.appendChild(btn);
+            btn.onclick = function() { startGame(i); };
+            cardsGrid.appendChild(btn);
         }
-        // Telegram Web App ማስነሻ
+
+        function generateFixedNumbers(cardNum) {
+            let numbers = [];
+            let b = getPseudoRandom(cardNum * 1, 1, 15, 5);
+            let i = getPseudoRandom(cardNum * 2, 16, 30, 5);
+            let n = getPseudoRandom(cardNum * 3, 31, 45, 5);
+            let g = getPseudoRandom(cardNum * 4, 46, 60, 5);
+            let o = getPseudoRandom(cardNum * 5, 61, 75, 5);
+
+            for (let r = 0; r < 5; r++) {
+                numbers.push(b[r]);
+                numbers.push(i[r]);
+                numbers.push(r === 2 ? "⭐" : n[r]);
+                numbers.push(g[r]);
+                numbers.push(o[r]);
+            }
+            return numbers;
+        }
+
+        function getPseudoRandom(seed, min, max, count) {
+            let res = [];
+            let current = seed;
+            while (res.length < count) {
+                current = (current * 9301 + 49297) % 233280;
+                let rnd = min + Math.floor((current / 233280) * (max - min + 1));
+                if (!res.includes(rnd)) res.push(rnd);
+            }
+            return res;
+        }
+
+        function startGame(cardNum) {
+            selectionScreen.style.display = "none";
+            gameScreen.style.display = "block";
+            cardTitle.innerText = "🎰 SEDOO BINGO - CARTELA #" + cardNum;
+
+            bingoBoard.innerHTML = "";
+            let headers = ['B', 'I', 'N', 'G', 'O'];
+            headers.forEach(h => {
+                let cell = document.createElement('div');
+                cell.className = 'header-cell';
+                cell.innerText = h;
+                bingoBoard.appendChild(cell);
+            });
+
+            currentCardNumbers = generateFixedNumbers(cardNum);
+
+            currentCardNumbers.forEach((num, index) => {
+                let cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.id = 'cell-' + index;
+                cell.innerText = num;
+                if (num === "⭐") cell.classList.add('marked', 'free');
+                bingoBoard.appendChild(cell);
+            });
+
+            startCallingNumbers();
+        }
+
+        function startCallingNumbers() {
+            let availableNumbers = Array.from({length: 75}, (_, i) => i + 1);
+            let calledList = [];
+
+            if (gameInterval) clearInterval(gameInterval);
+
+            gameInterval = setInterval(() => {
+                if (availableNumbers.length === 0) {
+                    clearInterval(gameInterval);
+                    return;
+                }
+                let randomIndex = Math.floor(Math.random() * availableNumbers.length);
+                let drawnNum = availableNumbers.splice(randomIndex, 1)[0];
+                calledList.push(drawnNum);
+
+                calledNumDisplay.innerText = drawnNum;
+
+                currentCardNumbers.forEach((num, idx) => {
+                    if (num === drawnNum) {
+                        let cell = document.getElementById('cell-' + idx);
+                        if (cell) cell.classList.add('marked');
+                    }
+                });
+
+            }, 3000);
+        }
+
+        function exitGame() {
+            if (gameInterval) clearInterval(gameInterval);
+            gameScreen.style.display = "none";
+            selectionScreen.style.display = "block";
+            calledNumDisplay.innerText = "READY!";
+        }
+
         window.Telegram.WebApp.ready();
     </script>
 </body>
