@@ -45,6 +45,7 @@ h2 {
   padding: 12px 5px;
   border-radius: 8px;
   font-weight: bold;
+  cursor: pointer;
 }
 
 #gameScreen {
@@ -80,6 +81,7 @@ h2 {
   border-radius: 8px;
   font-size: 15px;
   margin-top: 10px;
+  cursor: pointer;
 }
 
 .bingo-board {
@@ -133,6 +135,7 @@ h2 {
   font-weight: bold;
   font-size: 16px;
   border: none;
+  cursor: pointer;
 }
 
 .bingo-btn {
@@ -227,6 +230,7 @@ h2 {
   let calledNumbers = new Set();
   let lastDrawnNumber = null;
   let gameRunning = false;
+  let audioPlayer = new Audio();
 
   const columns = [
     { letter: "B", min: 1, max: 15 },
@@ -236,65 +240,22 @@ h2 {
     { letter: "O", min: 61, max: 75 }
   ];
 
-  const numberWords = {
-    1:"አንድ", 2:"ሁለት", 3:"ሶስት", 4:"አራት",
-    5:"አምስት", 6:"ስድስት", 7:"ሰባት", 8:"ስምንት",
-    9:"ዘጠኝ", 10:"አስር", 11:"አስራ አንድ",
-    12:"አስራ ሁለት", 13:"አስራ ሶስት",
-    14:"አስራ አራት", 15:"አስራ አምስት",
-    16:"አስራ ስድስት", 17:"አስራ ሰባት",
-    18:"አስራ ስምንት", 19:"አስራ ዘጠኝ",
-    20:"ሃያ", 21:"ሃያ አንድ", 22:"ሃያ ሁለት",
-    23:"ሃያ ሶስት", 24:"ሃያ አራት",
-    25:"ሃያ አምስት", 26:"ሃያ ስድስት",
-    27:"ሃያ ሰባት", 28:"ሃያ ስምንት",
-    29:"ሃያ ዘጠኝ", 30:"ሰላሳ",
-    31:"ሰላሳ አንድ", 32:"ሰላሳ ሁለት",
-    33:"ሰላሳ ሶስት", 34:"ሰላሳ አራት",
-    35:"ሰላሳ አምስት", 36:"ሰላሳ ስድስት",
-    37:"ሰላሳ ሰባት", 38:"ሰላሳ ስምንት",
-    39:"ሰላሳ ዘጠኝ", 40:"አርባ",
-    41:"አርባ አንድ", 42:"አርባ ሁለት",
-    43:"አርባ ሶስት", 44:"አርባ አራት",
-    45:"አርባ አምስት", 46:"አርባ ስድስት",
-    47:"አርባ ሰባት", 48:"አርባ ስምንት",
-    49:"አርባ ዘጠኝ", 50:"ሃምሳ",
-    51:"ሃምሳ አንድ", 52:"ሃምሳ ሁለት",
-    53:"ሃምሳ ሶስት", 54:"ሃምሳ አራት",
-    55:"ሃምሳ አምስት", 56:"ሃምሳ ስድስት",
-    57:"ሃምሳ ሰባት", 58:"ሃምሳ ስምንት",
-    59:"ሃምሳ ዘጠኝ", 60:"ስልሳ",
-    61:"ስልሳ አንድ", 62:"ስልሳ ሁለት",
-    63:"ስልሳ ሶስት", 64:"ስልሳ አራት",
-    65:"ስልሳ አምስት", 66:"ስልሳ ስድስት",
-    67:"ስልሳ ሰባት", 68:"ስልሳ ስምንት",
-    69:"ስልሳ ዘጠኝ", 70:"ሰባ",
-    71:"ሰባ አንድ", 72:"ሰባ ሁለት",
-    73:"ሰባ ሶስት", 74:"ሰባ አራት",
-    75:"ሰባ አምስት"
-  };
-
-  const letterWords = {
-    B: "ቢ",
-    I: "አይ",
-    N: "ኤን",
-    G: "ጂ",
-    O: "ኦ"
-  };
-
   // 150 ካርቴላዎችን መፍጠር
   for (let card = 1; card <= 150; card++) {
     const button = document.createElement("button");
     button.className = "card-btn";
     button.textContent = "ካርቴላ " + card;
     button.type = "button";
-    button.addEventListener("click", () => startGame(card));
+    button.addEventListener("click", () => {
+      // ተጫዋቹ ሲጫን ኦዲዮውን እንዲፈቅድ ማድረግ
+      audioPlayer.play().catch(() => {});
+      startGame(card);
+    });
     cardsGrid.appendChild(button);
   }
 
   function seededRandom(seed) {
     let state = seed >>> 0;
-
     return function() {
       state = (state * 1664525 + 1013904223) >>> 0;
       return state / 4294967296;
@@ -302,14 +263,8 @@ h2 {
   }
 
   function getSeededColumn(cardNum, columnIndex, min, max) {
-    const random = seededRandom(
-      cardNum * 1009 + columnIndex * 9176 + 12345
-    );
-
-    const values = Array.from(
-      { length: max - min + 1 },
-      (_, index) => min + index
-    );
+    const random = seededRandom(cardNum * 1009 + columnIndex * 9176 + 12345);
+    const values = Array.from({ length: max - min + 1 }, (_, index) => min + index);
 
     for (let i = values.length - 1; i > 0; i--) {
       const j = Math.floor(random() * (i + 1));
@@ -325,7 +280,6 @@ h2 {
     );
 
     const numbers = [];
-
     for (let row = 0; row < 5; row++) {
       for (let col = 0; col < 5; col++) {
         if (row === 2 && col === 2) {
@@ -335,15 +289,11 @@ h2 {
         }
       }
     }
-
     return numbers;
   }
 
   function letterForNumber(number) {
-    const col = columns.find(
-      item => number >= item.min && number <= item.max
-    );
-
+    const col = columns.find(item => number >= item.min && number <= item.max);
     return col ? col.letter : "";
   }
 
@@ -352,20 +302,14 @@ h2 {
       clearInterval(gameInterval);
       gameInterval = null;
     }
-
     gameRunning = false;
-
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
+    audioPlayer.pause();
   }
 
-  // የተጠራው ቁጥር በካርዱ ላይ ካለ አረንጓዴ ማድረግ
   function markMatchingCell(drawnNum) {
     currentCardNumbers.forEach((value, index) => {
       if (typeof value === "number" && value === drawnNum) {
         const cell = document.getElementById("cell-" + index);
-
         if (cell) {
           cell.classList.add("marked");
           gridState[index] = true;
@@ -374,28 +318,11 @@ h2 {
     });
   }
 
-  // ቁጥሩን በአማርኛ ለማንበብ
+  // ቁጥሩን በኦዲዮ ማጫወት (ተስተካክሏል)
   function playNumberAudio(number) {
     lastDrawnNumber = number;
-
-    if (!("speechSynthesis" in window)) {
-      gameStatus.textContent =
-        "የድምፅ አንባቢው በዚህ አሳሽ አይደገፍም።";
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-
-    const letter = letterWords[letterForNumber(number)] || "";
-    const word = numberWords[number] || String(number);
-    const utterance = new SpeechSynthesisUtterance(letter + " " + word);
-
-    utterance.lang = "am-ET";
-    utterance.rate = 0.8;
-    utterance.pitch = 1;
-    utterance.volume = 1;
-
-    window.speechSynthesis.speak(utterance);
+    audioPlayer.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${number}&tl=en&client=tw-ob`;
+    audioPlayer.play().catch(e => console.log("Audio Error:", e));
   }
 
   function replayAudio() {
@@ -412,18 +339,14 @@ h2 {
     }
 
     let number;
-
     do {
       number = Math.floor(Math.random() * 75) + 1;
     } while (calledNumbers.has(number));
 
     calledNumbers.add(number);
 
-    calledNumDisplay.textContent =
-      letterForNumber(number) + "-" + number;
-
-    gameStatus.textContent =
-      "የወጡ ቁጥሮች: " + calledNumbers.size + " / 75";
+    calledNumDisplay.textContent = letterForNumber(number) + "-" + number;
+    gameStatus.textContent = "የወጡ ቁጥሮች: " + calledNumbers.size + " / 75";
 
     markMatchingCell(number);
     playNumberAudio(number);
@@ -441,14 +364,13 @@ h2 {
     lastDrawnNumber = null;
 
     calledNumDisplay.textContent = "ይጠብቁ...";
-    gameStatus.textContent = "ቁጥሮች በየ 2 ሰከንዱ ይወጣሉ።";
+    gameStatus.textContent = "ቁጥሮች በየ 3 ሰከንዱ ይወጣሉ።";
 
     gameRunning = true;
-
     drawNumber();
 
     if (gameRunning) {
-      gameInterval = setInterval(drawNumber, 2000);
+      gameInterval = setInterval(drawNumber, 3000);
     }
   }
 
@@ -496,16 +418,20 @@ h2 {
   function checkBingo() {
     const lines = [];
 
+    // አግድም
     for (let row = 0; row < 5; row++) {
       lines.push([0, 1, 2, 3, 4].map(col => row * 5 + col));
     }
 
+    // ቁልቁል
     for (let col = 0; col < 5; col++) {
       lines.push([0, 1, 2, 3, 4].map(row => row * 5 + col));
     }
 
+    // ዲያጎናሎች
     lines.push([0, 6, 12, 18, 24]);
     lines.push([4, 8, 12, 16, 20]);
+    // 4 ማዕዘኖች
     lines.push([0, 4, 20, 24]);
 
     return lines.some(hasBingoLine);
@@ -523,27 +449,18 @@ h2 {
 
   function exitGame() {
     stopCallingNumbers();
-
     gameScreen.style.display = "none";
     selectionScreen.style.display = "block";
-
     calledNumDisplay.textContent = "ይጠብቁ...";
   }
 
-  document.getElementById("soundBtn")
-    .addEventListener("click", replayAudio);
-
-  document.getElementById("bingoBtn")
-    .addEventListener("click", claimBingo);
-
-  document.getElementById("restartBtn")
-    .addEventListener("click", () => {
-      const match = cardTitle.textContent.match(/#(\d+)/);
-      startGame(match ? Number(match[1]) : 1);
-    });
-
-  document.getElementById("backBtn")
-    .addEventListener("click", exitGame);
+  document.getElementById("soundBtn").addEventListener("click", replayAudio);
+  document.getElementById("bingoBtn").addEventListener("click", claimBingo);
+  document.getElementById("restartBtn").addEventListener("click", () => {
+    const match = cardTitle.textContent.match(/#(\d+)/);
+    startGame(match ? Number(match[1]) : 1);
+  });
+  document.getElementById("backBtn").addEventListener("click", exitGame);
 
   if (window.Telegram && window.Telegram.WebApp) {
     window.Telegram.WebApp.ready();
