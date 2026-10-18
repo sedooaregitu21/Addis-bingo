@@ -1,285 +1,307 @@
 <!DOCTYPE html>
 <html lang="am">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sedoo Bingo</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sedoo Bingo</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 
-  <style>
-    :root { color-scheme: dark; }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-    * { box-sizing: border-box; }
+body {
+  font-family: Arial, sans-serif;
+  background: #0f172a;
+  color: white;
+  margin: 0;
+  padding: 15px;
+  text-align: center;
+}
 
-    body {
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: #fff;
-      margin: 0;
-      padding: 15px;
-      text-align: center;
-    }
+h2 {
+  color: #f59e0b;
+}
 
-    h2 {
-      color: #f59e0b;
-      margin: 5px 0;
-    }
+.sub-title {
+  color: #cbd5e1;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
 
-    .sub-title {
-      color: #94a3b8;
-      font-size: 14px;
-      margin: 0 0 15px;
-    }
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
 
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-      max-height: 70vh;
-      overflow-y: auto;
-      padding: 5px;
-    }
+.card-btn {
+  background: #1e293b;
+  border: 2px solid #38bdf8;
+  color: white;
+  padding: 12px 5px;
+  border-radius: 8px;
+  font-weight: bold;
+}
 
-    .card-btn {
-      background: #1e293b;
-      border: 2px solid #38bdf8;
-      color: #fff;
-      padding: 12px 5px;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 13px;
-      cursor: pointer;
-    }
+#gameScreen {
+  display: none;
+}
 
-    #gameScreen {
-      display: none;
-    }
+.caller-box {
+  background: #1e293b;
+  border: 2px solid #f59e0b;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 15px;
+}
 
-    .caller-box {
-      background: #1e293b;
-      border: 2px solid #f59e0b;
-      border-radius: 12px;
-      padding: 12px;
-      margin-bottom: 15px;
-    }
+.called-number {
+  font-size: 36px;
+  font-weight: bold;
+  color: #10b981;
+  min-height: 43px;
+}
 
-    .called-number {
-      font-size: 36px;
-      font-weight: bold;
-      color: #10b981;
-      min-height: 43px;
-    }
+.status {
+  color: #cbd5e1;
+  font-size: 13px;
+  margin-top: 5px;
+}
 
-    .status {
-      color: #cbd5e1;
-      font-size: 13px;
-      margin-top: 5px;
-    }
+.sound-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-top: 10px;
+}
 
-    .sound-btn {
-      background: #3b82f6;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 10px;
-    }
+.bingo-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+  background: #1e293b;
+  padding: 8px;
+  border-radius: 12px;
+  margin-top: 10px;
+}
 
-    .bingo-board {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 5px;
-      background: #1e293b;
-      padding: 8px;
-      border-radius: 12px;
-      margin-top: 10px;
-    }
+.header-cell {
+  background: #f59e0b;
+  color: black;
+  font-weight: bold;
+  padding: 10px 0;
+  border-radius: 6px;
+  font-size: 18px;
+}
 
-    .header-cell {
-      background: #f59e0b;
-      color: #000;
-      font-weight: bold;
-      padding: 10px 0;
-      border-radius: 6px;
-      font-size: 18px;
-    }
+.cell {
+  background: #334155;
+  border-radius: 6px;
+  min-width: 0;
+  min-height: 47px;
+  padding: 10px 0;
+  font-weight: bold;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-    .cell {
-      background: #334155;
-      border-radius: 6px;
-      min-width: 0;
-      min-height: 47px;
-      padding: 10px 0;
-      font-weight: bold;
-      font-size: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+.cell.marked {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 0 8px #10b981;
+}
 
-    .cell.marked {
-      background: #10b981;
-      color: #fff;
-      box-shadow: 0 0 8px #10b981;
-    }
+.cell.free {
+  background: #ef4444;
+  color: white;
+}
 
-    .cell.free {
-      background: #ef4444;
-      color: white;
-    }
+.action-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 16px;
+  border: none;
+}
 
-    .action-btn {
-      margin-top: 12px;
-      width: 100%;
-      padding: 14px;
-      border-radius: 10px;
-      font-weight: bold;
-      font-size: 17px;
-      border: none;
-      cursor: pointer;
-    }
+.bingo-btn {
+  background: #eab308;
+  color: black;
+}
 
-    .bingo-btn {
-      background: #eab308;
-      color: #000;
-    }
+.back-btn {
+  background: #475569;
+  color: white;
+}
 
-    .back-btn {
-      background: #475569;
-      color: white;
-      font-size: 14px;
-    }
+.new-btn {
+  background: #2563eb;
+  color: white;
+}
 
-    .new-btn {
-      background: #2563eb;
-      color: white;
-      font-size: 14px;
-    }
-
-    .note {
-      color: #94a3b8;
-      font-size: 12px;
-      margin-top: 10px;
-    }
-  </style>
+.note {
+  color: #94a3b8;
+  font-size: 12px;
+  margin-top: 10px;
+}
+</style>
 </head>
 
 <body>
 
-  <div id="selectionScreen">
-    <h2>🎯 ሴዱ ቢንጎ (SEDOO BINGO) 🎰</h2>
+<div id="selectionScreen">
+  <h2>🎯 ሴዱ ቢንጎ 🎰</h2>
 
-    <div class="sub-title">
-      ለመጫወት ከ 1 እስከ 150 ያሉትን ካርቴላዎች ይምረጡ፦
-    </div>
-
-    <div class="cards-grid" id="cardsGrid"></div>
+  <div class="sub-title">
+    ከ 1 እስከ 150 ያሉትን ካርቴላዎች ይምረጡ።
   </div>
 
-  <div id="gameScreen">
+  <div class="cards-grid" id="cardsGrid"></div>
+</div>
 
-    <h3 id="cardTitle">ካርቴላ #1</h3>
+<div id="gameScreen">
 
-    <div class="caller-box">
+  <h3 id="cardTitle">ካርቴላ #1</h3>
 
-      <div style="font-size:12px;color:#94a3b8;">
-        የተጠራው ቁጥር
-      </div>
+  <div class="caller-box">
+    <div>የተጠራው ቁጥር</div>
 
-      <div class="called-number" id="calledNum">
-        ይጠብቁ...
-      </div>
-
-      <div class="status" id="gameStatus">
-        ጨዋታው ሊጀምር ነው።
-      </div>
-
-      <button class="sound-btn" id="soundBtn" type="button">
-        🔊 የመጨረሻውን ቁጥር ድምፅ አጫውት
-      </button>
-
+    <div class="called-number" id="calledNum">
+      ይጠብቁ...
     </div>
 
-    <div class="bingo-board" id="bingoBoard"></div>
-
-    <button class="action-btn bingo-btn" id="bingoBtn" type="button">
-      🏆 ቢንጎ! (BINGO)
-    </button>
-
-    <button class="action-btn new-btn" id="restartBtn" type="button">
-      🔄 አዲስ ጨዋታ ጀምር
-    </button>
-
-    <button class="action-btn back-btn" id="backBtn" type="button">
-      ወደ ካርቴላ መምረጫ ተመለስ
-    </button>
-
-    <div class="note">
-      ማስታወሻ፦ ይህ የፊት-ገጽ ጨዋታ ነው፤
-      የገንዘብ ክፍያ ወይም ሽልማት በአገልጋይ ላይ አይረጋገጥም።
+    <div class="status" id="gameStatus">
+      ጨዋታው ሊጀምር ነው።
     </div>
 
+    <button class="sound-btn" id="soundBtn">
+      🔊 የመጨረሻውን ቁጥር አንብብ
+    </button>
   </div>
+
+  <div class="bingo-board" id="bingoBoard"></div>
+
+  <button class="action-btn bingo-btn" id="bingoBtn">
+    🏆 ቢንጎ! (BINGO)
+  </button>
+
+  <button class="action-btn new-btn" id="restartBtn">
+    🔄 አዲስ ጨዋታ ጀምር
+  </button>
+
+  <button class="action-btn back-btn" id="backBtn">
+    ወደ ካርቴላ መምረጫ ተመለስ
+  </button>
+
+  <div class="note">
+    ይህ የጨዋታ ማሳያ ነው። የገንዘብ ክፍያ ወይም ሽልማት አያስተዳድርም።
+  </div>
+
+</div>
 
 <script>
 (() => {
 
-  const cardsGrid = document.getElementById('cardsGrid');
-  const selectionScreen = document.getElementById('selectionScreen');
-  const gameScreen = document.getElementById('gameScreen');
-  const bingoBoard = document.getElementById('bingoBoard');
-  const calledNumDisplay = document.getElementById('calledNum');
-  const cardTitle = document.getElementById('cardTitle');
-  const gameStatus = document.getElementById('gameStatus');
+  const cardsGrid = document.getElementById("cardsGrid");
+  const selectionScreen = document.getElementById("selectionScreen");
+  const gameScreen = document.getElementById("gameScreen");
+  const bingoBoard = document.getElementById("bingoBoard");
+  const calledNumDisplay = document.getElementById("calledNum");
+  const cardTitle = document.getElementById("cardTitle");
+  const gameStatus = document.getElementById("gameStatus");
 
   let currentCardNumbers = [];
   let gameInterval = null;
   let gridState = Array(25).fill(false);
   let calledNumbers = new Set();
   let lastDrawnNumber = null;
-  let audioPlayer = new Audio();
   let gameRunning = false;
 
   const columns = [
-    { letter: 'B', min: 1, max: 15 },
-    { letter: 'I', min: 16, max: 30 },
-    { letter: 'N', min: 31, max: 45 },
-    { letter: 'G', min: 46, max: 60 },
-    { letter: 'O', min: 61, max: 75 }
+    { letter: "B", min: 1, max: 15 },
+    { letter: "I", min: 16, max: 30 },
+    { letter: "N", min: 31, max: 45 },
+    { letter: "G", min: 46, max: 60 },
+    { letter: "O", min: 61, max: 75 }
   ];
+
+  const numberWords = {
+    1:"አንድ", 2:"ሁለት", 3:"ሶስት", 4:"አራት",
+    5:"አምስት", 6:"ስድስት", 7:"ሰባት", 8:"ስምንት",
+    9:"ዘጠኝ", 10:"አስር", 11:"አስራ አንድ",
+    12:"አስራ ሁለት", 13:"አስራ ሶስት",
+    14:"አስራ አራት", 15:"አስራ አምስት",
+    16:"አስራ ስድስት", 17:"አስራ ሰባት",
+    18:"አስራ ስምንት", 19:"አስራ ዘጠኝ",
+    20:"ሃያ", 21:"ሃያ አንድ", 22:"ሃያ ሁለት",
+    23:"ሃያ ሶስት", 24:"ሃያ አራት",
+    25:"ሃያ አምስት", 26:"ሃያ ስድስት",
+    27:"ሃያ ሰባት", 28:"ሃያ ስምንት",
+    29:"ሃያ ዘጠኝ", 30:"ሰላሳ",
+    31:"ሰላሳ አንድ", 32:"ሰላሳ ሁለት",
+    33:"ሰላሳ ሶስት", 34:"ሰላሳ አራት",
+    35:"ሰላሳ አምስት", 36:"ሰላሳ ስድስት",
+    37:"ሰላሳ ሰባት", 38:"ሰላሳ ስምንት",
+    39:"ሰላሳ ዘጠኝ", 40:"አርባ",
+    41:"አርባ አንድ", 42:"አርባ ሁለት",
+    43:"አርባ ሶስት", 44:"አርባ አራት",
+    45:"አርባ አምስት", 46:"አርባ ስድስት",
+    47:"አርባ ሰባት", 48:"አርባ ስምንት",
+    49:"አርባ ዘጠኝ", 50:"ሃምሳ",
+    51:"ሃምሳ አንድ", 52:"ሃምሳ ሁለት",
+    53:"ሃምሳ ሶስት", 54:"ሃምሳ አራት",
+    55:"ሃምሳ አምስት", 56:"ሃምሳ ስድስት",
+    57:"ሃምሳ ሰባት", 58:"ሃምሳ ስምንት",
+    59:"ሃምሳ ዘጠኝ", 60:"ስልሳ",
+    61:"ስልሳ አንድ", 62:"ስልሳ ሁለት",
+    63:"ስልሳ ሶስት", 64:"ስልሳ አራት",
+    65:"ስልሳ አምስት", 66:"ስልሳ ስድስት",
+    67:"ስልሳ ሰባት", 68:"ስልሳ ስምንት",
+    69:"ስልሳ ዘጠኝ", 70:"ሰባ",
+    71:"ሰባ አንድ", 72:"ሰባ ሁለት",
+    73:"ሰባ ሶስት", 74:"ሰባ አራት",
+    75:"ሰባ አምስት"
+  };
+
+  const letterWords = {
+    B: "ቢ",
+    I: "አይ",
+    N: "ኤን",
+    G: "ጂ",
+    O: "ኦ"
+  };
 
   // 150 ካርቴላዎችን መፍጠር
   for (let card = 1; card <= 150; card++) {
-
-    const button = document.createElement('button');
-
-    button.className = 'card-btn';
-    button.textContent = 'ካርቴላ ' + card;
-    button.type = 'button';
-
-    button.addEventListener('click', () => startGame(card));
-
+    const button = document.createElement("button");
+    button.className = "card-btn";
+    button.textContent = "ካርቴላ " + card;
+    button.type = "button";
+    button.addEventListener("click", () => startGame(card));
     cardsGrid.appendChild(button);
   }
 
-  // ተመሳሳይ የካርቴላ ቁጥር ተመሳሳይ ካርድ እንዲያመጣ
   function seededRandom(seed) {
-
     let state = seed >>> 0;
 
     return function() {
-
       state = (state * 1664525 + 1013904223) >>> 0;
-
       return state / 4294967296;
     };
   }
 
-  function getSeededColumn(cardNum, columnIndex, min, max, count) {
-
+  function getSeededColumn(cardNum, columnIndex, min, max) {
     const random = seededRandom(
       cardNum * 1009 + columnIndex * 9176 + 12345
     );
@@ -290,36 +312,24 @@
     );
 
     for (let i = values.length - 1; i > 0; i--) {
-
       const j = Math.floor(random() * (i + 1));
-
       [values[i], values[j]] = [values[j], values[i]];
     }
 
-    return values.slice(0, count);
+    return values.slice(0, 5);
   }
 
-  // የቢንጎ ካርድ ቁጥሮችን መፍጠር
   function generateFixedNumbers(cardNum) {
-
     const cols = columns.map((col, index) =>
-      getSeededColumn(
-        cardNum,
-        index,
-        col.min,
-        col.max,
-        5
-      )
+      getSeededColumn(cardNum, index, col.min, col.max)
     );
 
     const numbers = [];
 
     for (let row = 0; row < 5; row++) {
-
       for (let col = 0; col < 5; col++) {
-
-        if (col === 2 && row === 2) {
-          numbers.push('⭐');
+        if (row === 2 && col === 2) {
+          numbers.push("⭐");
         } else {
           numbers.push(cols[col][row]);
         }
@@ -329,187 +339,148 @@
     return numbers;
   }
 
-  // ቁጥሩ የሚመደብበትን B/I/N/G/O ማወቅ
   function letterForNumber(number) {
-
-    const column = columns.find(
-      col => number >= col.min && number <= col.max
+    const col = columns.find(
+      item => number >= item.min && number <= item.max
     );
 
-    return column ? column.letter : '';
+    return col ? col.letter : "";
   }
 
-  // የቁጥር ጥሪውን ማቆም
   function stopCallingNumbers() {
-
     if (gameInterval !== null) {
-
       clearInterval(gameInterval);
-
       gameInterval = null;
     }
 
     gameRunning = false;
+
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
   }
 
-  // የተጠራው ቁጥር በካርዱ ላይ ካለ ራሱ እንዲመረጥ
+  // የተጠራው ቁጥር በካርዱ ላይ ካለ አረንጓዴ ማድረግ
   function markMatchingCell(drawnNum) {
-
     currentCardNumbers.forEach((value, index) => {
-
-      if (typeof value === 'number' && value === drawnNum) {
-
-        const cell = document.getElementById('cell-' + index);
+      if (typeof value === "number" && value === drawnNum) {
+        const cell = document.getElementById("cell-" + index);
 
         if (cell) {
-
-          cell.classList.add('marked');
-
+          cell.classList.add("marked");
           gridState[index] = true;
         }
       }
     });
   }
 
-  // የቁጥሩን ድምፅ ማጫወት
+  // ቁጥሩን በአማርኛ ለማንበብ
   function playNumberAudio(number) {
-
-    if (!number) return;
-
     lastDrawnNumber = number;
 
-    audioPlayer.pause();
-    audioPlayer.currentTime = 0;
-
-    audioPlayer.src =
-      `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodeURIComponent(
-        letterForNumber(number) + ' ' + number
-      )}&tl=en&client=tw-ob`;
-
-    audioPlayer.play().catch(() => {
-
+    if (!("speechSynthesis" in window)) {
       gameStatus.textContent =
-        'ቁጥሮቹ እየወጡ ነው። ድምፅ ለመስማት የድምፅ አዝራሩን ይጫኑ።';
+        "የድምፅ አንባቢው በዚህ አሳሽ አይደገፍም።";
+      return;
+    }
 
-    });
+    window.speechSynthesis.cancel();
+
+    const letter = letterWords[letterForNumber(number)] || "";
+    const word = numberWords[number] || String(number);
+    const utterance = new SpeechSynthesisUtterance(letter + " " + word);
+
+    utterance.lang = "am-ET";
+    utterance.rate = 0.8;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    window.speechSynthesis.speak(utterance);
   }
 
-  // የመጨረሻውን ቁጥር ድምፅ እንደገና ማጫወት
   function replayAudio() {
-
     if (lastDrawnNumber !== null) {
-
       playNumberAudio(lastDrawnNumber);
     }
   }
 
-  // አዲስ ቁጥር መጥራት
   function drawNumber() {
-
     if (!gameRunning || calledNumbers.size >= 75) {
-
       stopCallingNumbers();
-
-      gameStatus.textContent = '75ቱም ቁጥሮች ወጥተዋል።';
-
+      gameStatus.textContent = "75ቱም ቁጥሮች ወጥተዋል።";
       return;
     }
 
-    let drawnNum;
+    let number;
 
     do {
+      number = Math.floor(Math.random() * 75) + 1;
+    } while (calledNumbers.has(number));
 
-      drawnNum = Math.floor(Math.random() * 75) + 1;
-
-    } while (calledNumbers.has(drawnNum));
-
-    calledNumbers.add(drawnNum);
+    calledNumbers.add(number);
 
     calledNumDisplay.textContent =
-      `${letterForNumber(drawnNum)}-${drawnNum}`;
+      letterForNumber(number) + "-" + number;
 
     gameStatus.textContent =
-      `የወጡ ቁጥሮች: ${calledNumbers.size} / 75`;
+      "የወጡ ቁጥሮች: " + calledNumbers.size + " / 75";
 
-    // አስፈላጊው ማስተካከያ፦ ቁጥሩ ካርዱ ላይ ካለ ራሱ ይመረጣል
-    markMatchingCell(drawnNum);
-
-    playNumberAudio(drawnNum);
+    markMatchingCell(number);
+    playNumberAudio(number);
 
     if (calledNumbers.size >= 75) {
-
       stopCallingNumbers();
-
-      gameStatus.textContent = '75ቱም ቁጥሮች ወጥተዋል።';
+      gameStatus.textContent = "75ቱም ቁጥሮች ወጥተዋል።";
     }
   }
 
-  // ቁጥሮችን በየ 2 ሰከንዱ መጥራት
   function startCallingNumbers() {
-
     stopCallingNumbers();
 
     calledNumbers = new Set();
-
     lastDrawnNumber = null;
 
-    calledNumDisplay.textContent = 'ይጠብቁ...';
-
-    gameStatus.textContent =
-      'ቁጥሮች በየ 2 ሰከንዱ ይወጣሉ።';
+    calledNumDisplay.textContent = "ይጠብቁ...";
+    gameStatus.textContent = "ቁጥሮች በየ 2 ሰከንዱ ይወጣሉ።";
 
     gameRunning = true;
 
     drawNumber();
 
-    gameInterval = setInterval(drawNumber, 2000);
+    if (gameRunning) {
+      gameInterval = setInterval(drawNumber, 2000);
+    }
   }
 
-  // ጨዋታውን መጀመር
   function startGame(cardNum) {
-
     stopCallingNumbers();
 
-    selectionScreen.style.display = 'none';
+    selectionScreen.style.display = "none";
+    gameScreen.style.display = "block";
 
-    gameScreen.style.display = 'block';
+    cardTitle.textContent = "🎰 ሴዱ ቢንጎ - ካርቴላ #" + cardNum;
 
-    cardTitle.textContent =
-      `🎰 ሴዱ ቢንጎ - ካርቴላ #${cardNum}`;
-
-    bingoBoard.innerHTML = '';
-
+    bingoBoard.innerHTML = "";
     gridState = Array(25).fill(false);
-
     gridState[12] = true;
 
-    // B I N G O የሚሉትን ርዕሶች ማሳየት
-    ['B', 'I', 'N', 'G', 'O'].forEach(letter => {
-
-      const cell = document.createElement('div');
-
-      cell.className = 'header-cell';
-
+    ["B", "I", "N", "G", "O"].forEach(letter => {
+      const cell = document.createElement("div");
+      cell.className = "header-cell";
       cell.textContent = letter;
-
       bingoBoard.appendChild(cell);
     });
 
     currentCardNumbers = generateFixedNumbers(cardNum);
 
     currentCardNumbers.forEach((number, index) => {
-
-      const cell = document.createElement('div');
-
-      cell.className = 'cell';
-
-      cell.id = 'cell-' + index;
-
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.id = "cell-" + index;
       cell.textContent = number;
 
-      if (number === '⭐') {
-
-        cell.classList.add('marked', 'free');
+      if (number === "⭐") {
+        cell.classList.add("marked", "free");
       }
 
       bingoBoard.appendChild(cell);
@@ -518,108 +489,64 @@
     startCallingNumbers();
   }
 
-  // ሙሉ መስመር መኖሩን መፈተሽ
   function hasBingoLine(indices) {
-
-    return indices.every(
-      index => gridState[index] === true
-    );
+    return indices.every(index => gridState[index] === true);
   }
 
-  // ቢንጎ ማረጋገጫ
   function checkBingo() {
-
     const lines = [];
 
-    // አግድም መስመሮች
     for (let row = 0; row < 5; row++) {
-
-      lines.push(
-        [0, 1, 2, 3, 4].map(
-          col => row * 5 + col
-        )
-      );
+      lines.push([0, 1, 2, 3, 4].map(col => row * 5 + col));
     }
 
-    // ቁመት መስመሮች
     for (let col = 0; col < 5; col++) {
-
-      lines.push(
-        [0, 1, 2, 3, 4].map(
-          row => row * 5 + col
-        )
-      );
+      lines.push([0, 1, 2, 3, 4].map(row => row * 5 + col));
     }
 
-    // ሰያፍ መስመሮች
     lines.push([0, 6, 12, 18, 24]);
-
     lines.push([4, 8, 12, 16, 20]);
-
-    // አራቱ ማዕዘኖች
     lines.push([0, 4, 20, 24]);
 
-    return lines.filter(hasBingoLine).length >= 1;
+    return lines.some(hasBingoLine);
   }
 
-  // ተጫዋቹ BINGO ሲል
   function claimBingo() {
-
     if (checkBingo()) {
-
       stopCallingNumbers();
-
-      gameStatus.textContent = 'BINGO ተረጋግጧል!';
-
-      alert(
-        '🎉 ቢንጎ! ካርድዎ ላይ ቢያንስ አንድ ሙሉ መስመር ተሟልቷል።'
-      );
-
+      gameStatus.textContent = "BINGO ተረጋግጧል!";
+      alert("🎉 ቢንጎ! በካርድህ ላይ ሙሉ መስመር ተሟልቷል።");
     } else {
-
-      alert(
-        '❌ ገና ሙሉ መስመር አልተሟላም። የተጠሩትን ቁጥሮች ይጠብቁ።'
-      );
+      alert("ገና ሙሉ መስመር አልተሟላም። ቁጥሮቹን ይጠብቁ።");
     }
   }
 
-  // ወደ ካርቴላ መምረጫ መመለስ
   function exitGame() {
-
     stopCallingNumbers();
 
-    audioPlayer.pause();
+    gameScreen.style.display = "none";
+    selectionScreen.style.display = "block";
 
-    gameScreen.style.display = 'none';
-
-    selectionScreen.style.display = 'block';
-
-    calledNumDisplay.textContent = 'ይጠብቁ...';
+    calledNumDisplay.textContent = "ይጠብቁ...";
   }
 
-  // አዝራሮችን ማስኬድ
-  document.getElementById('soundBtn')
-    .addEventListener('click', replayAudio);
+  document.getElementById("soundBtn")
+    .addEventListener("click", replayAudio);
 
-  document.getElementById('bingoBtn')
-    .addEventListener('click', claimBingo);
+  document.getElementById("bingoBtn")
+    .addEventListener("click", claimBingo);
 
-  document.getElementById('restartBtn')
-    .addEventListener('click', () => {
-
+  document.getElementById("restartBtn")
+    .addEventListener("click", () => {
       const match = cardTitle.textContent.match(/#(\d+)/);
-
       startGame(match ? Number(match[1]) : 1);
     });
 
-  document.getElementById('backBtn')
-    .addEventListener('click', exitGame);
+  document.getElementById("backBtn")
+    .addEventListener("click", exitGame);
 
-  // ከ Telegram Mini App ጋር እንዲሰራ
   if (window.Telegram && window.Telegram.WebApp) {
-
     window.Telegram.WebApp.ready();
-
     window.Telegram.WebApp.expand();
   }
 
