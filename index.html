@@ -184,12 +184,17 @@
             return res;
         }
 
-        // ቁጥሮችን በ MP3 Audio በቀጥታ ማጫወት (100% የሚሰራ)
-        function playNumberAudio(num) {
-            // Google TTS Audio URL በመጠቀም በቀጥታ ድምፅ ማጫወት
-            let audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${num}&tl=en&client=tw-ob`;
-            audioPlayer.src = audioUrl;
-            audioPlayer.play().catch(e => console.log("Audio play error:", e));
+        // በቴሌግራም ውስጥ 100% የሚሰራ የድምፅ ማጫወቻ (Google TTS MP3 Stream)
+        function playAudio(num) {
+            try {
+                let url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${num}&tl=en&client=tw-ob`;
+                audioPlayer.src = url;
+                audioPlayer.play().catch(e => {
+                    console.log("Audio play blocked:", e);
+                });
+            } catch (err) {
+                console.log("Audio error:", err);
+            }
         }
 
         function startGame(cardNum) {
@@ -199,7 +204,7 @@
 
             bingoBoard.innerHTML = "";
             gridState = Array(25).fill(false);
-            gridState[12] = true;
+            gridState[12] = true; // FREE STAR
 
             let headers = ['B', 'I', 'N', 'G', 'O'];
             headers.forEach(h => {
@@ -237,7 +242,7 @@
                 let drawnNum = availableNumbers.splice(randomIndex, 1)[0];
 
                 calledNumDisplay.innerText = drawnNum;
-                playNumberAudio(drawnNum); // MP3 Audio ጥሪ
+                playAudio(drawnNum); // ጮክ ብሎ በድምፅ የሚጠራው
 
                 currentCardNumbers.forEach((num, idx) => {
                     if (num === drawnNum) {
@@ -247,21 +252,39 @@
                     }
                 });
 
-            }, 2000);
+            }, 2000); // በየ 2 ሴኮንዱ
         }
 
+        // ትክክለኛው የ 2 መስመር ማረጋገጫ (Rows, Columns, Diagonals, Corners)
         function checkBingo() {
-            let lines = 0;
-            for (let r = 0; r < 5; r++) {
-                if ([0,1,2,3,4].every(c => gridState[r*5 + c])) lines++;
-            }
-            for (let c = 0; c < 5; c++) {
-                if ([0,1,2,3,4].every(r => gridState[r*5 + c])) lines++;
-            }
-            if ([0,6,12,18,24].every(i => gridState[i])) lines++;
-            if ([4,8,12,16,20].every(i => gridState[i])) lines++;
+            let completedLines = 0;
 
-            return lines >= 2;
+            // 1. አግድም (Rows)
+            for (let r = 0; r < 5; r++) {
+                if ([0, 1, 2, 3, 4].every(c => gridState[r * 5 + c])) completedLines++;
+            }
+
+            // 2. ቁልቁል (Columns)
+            for (let c = 0; c < 5; c++) {
+                if ([0, 1, 2, 3, 4].every(r => gridState[r * 5 + c])) completedLines++;
+            }
+
+            // 3. ዲያጎናል 1 (0, 6, 12, 18, 24)
+            if (gridState[0] && gridState[6] && gridState[12] && gridState[18] && gridState[24]) {
+                completedLines++;
+            }
+
+            // 4. ዲያጎናል 2 (4, 8, 12, 16, 20)
+            if (gridState[4] && gridState[8] && gridState[12] && gridState[16] && gridState[20]) {
+                completedLines++;
+            }
+
+            // 5. 4 ማዕዘኖች (0, 4, 20, 24)
+            if (gridState[0] && gridState[4] && gridState[20] && gridState[24]) {
+                completedLines++;
+            }
+
+            return completedLines >= 2;
         }
 
         function claimBingo() {
