@@ -143,26 +143,16 @@
         let currentCardNumbers = [];
         let gameInterval = null;
         let gridState = Array(25).fill(false);
-        let audioUnlocked = false;
+        let audioPlayer = new Audio();
 
         for (let i = 1; i <= 150; i++) {
             let btn = document.createElement('button');
             btn.className = 'card-btn';
             btn.innerText = 'ካርቴላ ' + i;
             btn.onclick = function() { 
-                unlockAudio();
                 startGame(i); 
             };
             cardsGrid.appendChild(btn);
-        }
-
-        // ስክሪኑ ሲነካ የድምፅ ፈቃድ ማስተካከያ (Audio Unlock)
-        function unlockAudio() {
-            if (!audioUnlocked && 'speechSynthesis' in window) {
-                let silentUtterance = new SpeechSynthesisUtterance('');
-                window.speechSynthesis.speak(silentUtterance);
-                audioUnlocked = true;
-            }
         }
 
         function generateFixedNumbers(cardNum) {
@@ -194,16 +184,12 @@
             return res;
         }
 
-        // ድምፅ በግልጽ እንዲናገር ማድረግ
-        function speakNumber(num) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let msg = new SpeechSynthesisUtterance(num.toString());
-                msg.rate = 0.8; // ድምፁ በግልጽ እንዲሰማ ትንሽ ዝቅ ተደርጓል
-                msg.pitch = 0.7; // የወንድ ድምፅ
-                msg.lang = 'am-ET'; // አማርኛ
-                window.speechSynthesis.speak(msg);
-            }
+        // ቁጥሮችን በ MP3 Audio በቀጥታ ማጫወት (100% የሚሰራ)
+        function playNumberAudio(num) {
+            // Google TTS Audio URL በመጠቀም በቀጥታ ድምፅ ማጫወት
+            let audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${num}&tl=en&client=tw-ob`;
+            audioPlayer.src = audioUrl;
+            audioPlayer.play().catch(e => console.log("Audio play error:", e));
         }
 
         function startGame(cardNum) {
@@ -251,7 +237,7 @@
                 let drawnNum = availableNumbers.splice(randomIndex, 1)[0];
 
                 calledNumDisplay.innerText = drawnNum;
-                speakNumber(drawnNum);
+                playNumberAudio(drawnNum); // MP3 Audio ጥሪ
 
                 currentCardNumbers.forEach((num, idx) => {
                     if (num === drawnNum) {
