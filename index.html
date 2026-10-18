@@ -143,6 +143,17 @@
         let currentCardNumbers = [];
         let gameInterval = null;
         let gridState = Array(25).fill(false);
+        let voices = [];
+
+        function loadVoices() {
+            if ('speechSynthesis' in window) {
+                voices = window.speechSynthesis.getVoices();
+            }
+        }
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            loadVoices();
+        }
 
         for (let i = 1; i <= 150; i++) {
             let btn = document.createElement('button');
@@ -181,14 +192,20 @@
             return res;
         }
 
-        // ቁጥሩን በአማርኛ ድምፅ ማንበብ
+        // የወንድ ድምፅ እና የአማርኛ ጥሪ በየ 2 ሴኮንዱ
         function speakNumber(num) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
                 let msg = new SpeechSynthesisUtterance(num.toString());
                 msg.rate = 0.9;
-                msg.pitch = 0.8; // የወንድ ድምፅ ውፍረት
-                msg.lang = 'am-ET'; // የድምፅ ቋንቋ ወደ አማርኛ ተቀይሯል
+                msg.pitch = 0.7; // የወንድ ድምፅ ውፍረት
+                msg.lang = 'am-ET'; // የአማርኛ ድምፅ መምረጫ
+                
+                let maleVoice = voices.find(v => v.name.includes('Male') || v.name.includes('David') || v.name.includes('Google US English'));
+                if (maleVoice) {
+                    msg.voice = maleVoice;
+                }
+                
                 window.speechSynthesis.speak(msg);
             }
         }
@@ -200,7 +217,7 @@
 
             bingoBoard.innerHTML = "";
             gridState = Array(25).fill(false);
-            gridState[12] = true; // FREE space
+            gridState[12] = true;
 
             let headers = ['B', 'I', 'N', 'G', 'O'];
             headers.forEach(h => {
@@ -224,7 +241,6 @@
             startCallingNumbers();
         }
 
-        // በየ 2 ሴኮንዱ ቁጥር መጥራት
         function startCallingNumbers() {
             let availableNumbers = Array.from({length: 75}, (_, i) => i + 1);
 
@@ -239,7 +255,7 @@
                 let drawnNum = availableNumbers.splice(randomIndex, 1)[0];
 
                 calledNumDisplay.innerText = drawnNum;
-                speakNumber(drawnNum); // የአማርኛ ድምፅ ጥሪ
+                speakNumber(drawnNum);
 
                 currentCardNumbers.forEach((num, idx) => {
                     if (num === drawnNum) {
@@ -249,21 +265,17 @@
                     }
                 });
 
-            }, 2000); // 2 ሴኮንድ
+            }, 2000); // በየ 2 ሴኮንዱ ቁጥር መጥራት
         }
 
-        // 2 መስመር መዘጋቱን ማረጋገጥ
         function checkBingo() {
             let lines = 0;
-            //Rows (አግድም)
             for (let r = 0; r < 5; r++) {
                 if ([0,1,2,3,4].every(c => gridState[r*5 + c])) lines++;
             }
-            //Cols (ቁመት)
             for (let c = 0; c < 5; c++) {
                 if ([0,1,2,3,4].every(r => gridState[r*5 + c])) lines++;
             }
-            //Diagonals (ዲያጎናል)
             if ([0,6,12,18,24].every(i => gridState[i])) lines++;
             if ([4,8,12,16,20].every(i => gridState[i])) lines++;
 
