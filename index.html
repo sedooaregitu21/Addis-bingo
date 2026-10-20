@@ -39,28 +39,34 @@
   .action-banner h2 { color: #facc15; font-size: 22px; margin-bottom: 5px; }
   .open-cartela-btn { background: var(--accent-yellow); color: #000; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; font-size: 15px; margin-top: 15px; cursor: pointer; }
 
+  .medeb-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
+  .medeb-card { background: var(--card-bg); border-radius: 12px; padding: 15px; text-align: center; border: 1px solid #1e293b; position: relative; }
+  .medeb-badge { position: absolute; top: 10px; right: 10px; background: var(--accent-blue); font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+  .medeb-amount { font-size: 26px; font-weight: bold; margin: 10px 0; color: var(--accent-yellow); }
+  .medeb-stats { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-gray); margin-bottom: 12px; }
+  .join-btn { width: 100%; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
   .cartela-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-height: 250px; overflow-y: auto; background: var(--card-bg); padding: 8px; border-radius: 8px; }
   .grid-num { background: #1e293b; border-radius: 4px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; }
   .grid-num.selected { background: var(--accent-green); color: white; border: 2px solid #fff; }
 
-  /* Recent Called Numbers Display */
   .called-container { background: var(--card-bg); border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 15px; border: 1px solid var(--accent-yellow); }
   .big-number { font-size: 32px; font-weight: bold; color: var(--accent-yellow); }
   .recent-list { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
-  .recent-badge { background: #1e293b; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-color: var(--accent-green); border: 1px solid var(--accent-blue); }
+  .recent-badge { background: #1e293b; padding: 4px 8px; border-radius: 6px; font-size: 12px; color: var(--accent-green); border: 1px solid var(--accent-blue); }
 
-  /* Board Matrix */
-  .bingo-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; background: var(--card-bg); padding: 8px; border-radius: 12px; margin-bottom: 15px; }
-  .b-cell { background: #1e293b; height: 42px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 15px; cursor: pointer; }
-  .b-cell.header { background: var(--accent-blue); color: white; font-size: 16px; }
-  .b-cell.called { background: #ef4444; color: white; }
-  .b-cell.marked { background: var(--accent-green); color: white; box-shadow: 0 0 8px var(--accent-green); }
+  .timer-box { font-size: 13px; color: var(--accent-yellow); font-weight: bold; margin-bottom: 10px; background: #1e293b; padding: 6px; border-radius: 6px; text-align: center; }
+
+  .bingo-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: var(--card-bg); padding: 8px; border-radius: 12px; margin-bottom: 15px; }
+  .b-cell { background: #334155; height: 38px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; cursor: pointer; }
+  .b-cell.header { background: var(--accent-blue); color: white; font-size: 15px; }
+  .b-cell.marked { background: var(--accent-green); color: white; box-shadow: 0 0 6px var(--accent-green); }
   .b-cell.free { background: var(--accent-yellow); color: black; }
 
-  /* Bank Deposit Styling */
   .method-card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #1e293b; }
   .bank-details { font-size: 13px; color: var(--accent-yellow); margin-top: 6px; background: #0f172a; padding: 8px; border-radius: 6px; }
-  .receipt-btn { background: var(--accent-blue); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-top: 8px; cursor: pointer; width: 100%; }
+  .input-field { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; margin-top: 8px; font-size: 13px; }
+  .action-form-btn { background: var(--accent-green); color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13px; margin-top: 8px; cursor: pointer; width: 100%; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -87,9 +93,31 @@
     <p style="font-size: 12px; color: var(--text-gray);">Pick 1 up to 4 Cartelas!</p>
     <button class="open-cartela-btn" onclick="switchScreen('selectionScreen')">OPEN CARTELA ➔</button>
   </div>
+
+  <h3 style="font-size: 14px; margin-bottom: 5px; color: var(--text-gray);">SELECT MEDEB & DERASH</h3>
+  <div class="medeb-grid">
+    <div class="medeb-card">
+      <span class="medeb-badge">ETB</span>
+      <div class="medeb-amount">10 ETB</div>
+      <div class="medeb-stats">
+        <span>DERASH: <b style="color: var(--accent-yellow);">20 ETB</b></span>
+        <span>PLAYERS: <b>3</b></span>
+      </div>
+      <button class="join-btn" onclick="switchScreen('selectionScreen')">Join Match 🔥</button>
+    </div>
+    <div class="medeb-card">
+      <span class="medeb-badge">ETB</span>
+      <div class="medeb-amount">20 ETB</div>
+      <div class="medeb-stats">
+        <span>DERASH: <b style="color: var(--accent-yellow);">40 ETB</b></span>
+        <span>PLAYERS: <b>1</b></span>
+      </div>
+      <button class="join-btn" onclick="switchScreen('selectionScreen')">Join Match 🔥</button>
+    </div>
+  </div>
 </div>
 
-<!-- CARTELA SELECTION SCREEN (Max 4 Selection) -->
+<!-- CARTELA SELECTION SCREEN -->
 <div id="selectionScreen" class="screen">
   <h3 style="margin-bottom: 10px;">PICK CARTELAS (Selected: <span id="selectedCount">0</span>/4)</h3>
   <div class="cartela-grid" id="selectionGrid"></div>
@@ -98,6 +126,8 @@
 
 <!-- GAMEPLAY SCREEN -->
 <div id="gameplayScreen" class="screen">
+  <div class="timer-box">⏳ Game Starts / Next Call in: <span id="gameTimer">30</span>s</div>
+  
   <div class="called-container">
     <div style="font-size: 11px; color: var(--text-gray);">LAST CALLED NUMBER</div>
     <div class="big-number" id="calledNumDisplay">--</div>
@@ -111,29 +141,26 @@
 
   <div id="activeBoardsContainer"></div>
 
-  <button class="open-cartela-btn" style="width: 100%; margin-top: 10px; background: var(--accent-yellow);" onclick="claimBingo()">🏆 BINGO!</button>
+  <button class="open-cartela-btn" style="width: 100%; margin-top: 5px; background: var(--accent-yellow);" onclick="claimBingo()">🏆 BINGO!</button>
 </div>
 
-<!-- DEPOSIT SCREEN WITH RECEIPT SUBMISSION -->
+<!-- DEPOSIT & WITHDRAW SCREEN -->
 <div id="depositScreen" class="screen">
-  <h3 style="margin-bottom: 15px;">Deposit Funds (Bank Options)</h3>
+  <h3 style="margin-bottom: 15px;">Deposit & Withdraw Funds</h3>
   
   <div class="method-card">
     <h4>Commercial Bank of Ethiopia (CBE)</h4>
     <div class="bank-details">Acc: <b>1000745390448</b></div>
+    <input type="text" class="input-field" id="cbeAcc" placeholder="Enter your CBE Account/Name">
+    <button class="action-form-btn" onclick="submitTransaction('CBE')">Submit Deposit / Withdraw Request</button>
   </div>
 
   <div class="method-card">
     <h4>Telebirr</h4>
     <div class="bank-details">Acc: <b>0985177839</b></div>
+    <input type="text" class="input-field" id="teleAcc" placeholder="Enter your Telebirr Phone Number">
+    <button class="action-form-btn" onclick="submitTransaction('Telebirr')">Submit Deposit / Withdraw Request</button>
   </div>
-
-  <div class="method-card">
-    <h4>Bank of Abyssinia (BOA)</h4>
-    <div class="bank-details">Acc: <b>92707617</b></div>
-  </div>
-
-  <button class="receipt-btn" onclick="sendReceiptToBot()"><i class="fa-solid fa-paperclip"></i> Send Payment Receipt Screenshot to Bot</button>
 </div>
 
 <!-- NAVIGATION -->
@@ -152,9 +179,9 @@
   let selectedCartelas = [];
   let currentBalance = 140;
   let gameInterval = null;
+  let timerInterval = null;
   let calledHistory = [];
 
-  // 150 Cartela Grid with max 4 selections
   const gridContainer = document.getElementById("selectionGrid");
   for (let i = 1; i <= 150; i++) {
     const el = document.createElement("div");
@@ -166,7 +193,7 @@
         el.classList.remove('selected');
       } else {
         if (selectedCartelas.length >= 4) {
-          alert("Osobola okulonda kartela zitakka 4 zokka!");
+          alert("Osobola okulonda kartela 4 zokka!");
           return;
         }
         selectedCartelas.push(i);
@@ -207,7 +234,7 @@
 
   function startGameplay() {
     if (selectedCartelas.length === 0) {
-      alert("Londawo okusinga kartela emu!");
+      alert("Londawo akatono kartela emu!");
       return;
     }
     let cost = selectedCartelas.length * 10;
@@ -219,14 +246,28 @@
     document.getElementById('walletBal').innerText = currentBalance + " ETB";
     switchScreen('gameplayScreen');
     renderBoards();
+    startTimer();
     startCalling();
+  }
+
+  function startTimer() {
+    let timeLeft = 30;
+    document.getElementById('gameTimer').innerText = timeLeft;
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      document.getElementById('gameTimer').innerText = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+      }
+    }, 1000);
   }
 
   function renderBoards() {
     const container = document.getElementById('activeBoardsContainer');
     container.innerHTML = '';
     selectedCartelas.forEach(cNum => {
-      let html = `<h4 style="margin: 5px 0; color: var(--accent-yellow);">CARTELA #${cNum}</h4>`;
+      let html = `<h4 style="margin: 3px 0; color: var(--accent-yellow); font-size: 13px;">CARTELA #${cNum}</h4>`;
       html += `<div class="bingo-board" id="board-${cNum}">`;
       ['B','I','N','G','O'].forEach(h => {
         html += `<div class="b-cell header">${h}</div>`;
@@ -263,7 +304,6 @@
 
       document.getElementById('calledNumDisplay').innerText = formatted;
 
-      // Update Recent 3 Called Numbers
       let recent = calledHistory.slice(-4, -1).reverse();
       const recentContainer = document.getElementById('recentList');
       recentContainer.innerHTML = '';
@@ -271,30 +311,25 @@
         recentContainer.innerHTML += `<span class="recent-badge">${getLetter(n)} ${n}</span>`;
       });
 
-      // Highlight Called Numbers in Cards
       document.querySelectorAll(`.num-${num}`).forEach(el => {
-        el.classList.add('called');
+        el.classList.add('marked');
       });
 
-      // Audio Callout
       playSound(`${letter} ${num}`);
-    }, 4000);
+    }, 3000);
   }
 
-  function sendReceiptToBot() {
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.close();
-    } else {
-      alert("Suka mu bot ozze osindike screenshot wano!");
-    }
+  function submitTransaction(method) {
+    alert(`Ebisaba byo ebya ${method} biweereddwaayo bulungi! Abalabirizi ba bot bajja kubitawulula.`);
   }
 
   function claimBingo() {
     if (gameInterval) clearInterval(gameInterval);
-    playSound("Bingo! You won!");
+    if (timerInterval) clearInterval(timerInterval);
+    playSound("Bingo! You won 50 ETB!");
     currentBalance += 50;
     document.getElementById('walletBal').innerText = currentBalance + " ETB";
-    alert("🎉 BINGO Verified! Wawangudde 50 ETB!");
+    alert("🎉 BINGO Verified! Wawangudde ekitabo ky'omuzannyo wamu n'ekirabo kya 50 ETB!");
     switchScreen('gamesScreen');
   }
 
