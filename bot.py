@@ -1,293 +1,259 @@
-<!DOCTYPE html>
-<html lang="am">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sedoo Bingo</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #0f172a;
-            color: #ffffff;
-            margin: 0;
-            padding: 15px;
-            text-align: center;
-        }
-        h2 { color: #f59e0b; margin-bottom: 5px; }
-        .sub-title { color: #94a3b8; font-size: 14px; margin-bottom: 15px; }
-        
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 8px;
-            max-height: 70vh;
-            overflow-y: auto;
-            padding: 5px;
-        }
-        .card-btn {
-            background-color: #1e293b;
-            border: 2px solid #38bdf8;
-            color: white;
-            padding: 12px 5px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 13px;
-            cursor: pointer;
-        }
+import os
+import sqlite3
+import random
+import threading
+import logging
+from flask import Flask
+import telebot
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
-        #gameScreen { display: none; }
-        
-        .caller-box {
-            background-color: #1e293b;
-            border: 2px solid #f59e0b;
-            border-radius: 12px;
-            padding: 10px;
-            margin-bottom: 15px;
-        }
-        .called-number {
-            font-size: 36px;
-            font-weight: bold;
-            color: #10b981;
-        }
-        
-        .bingo-board {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 5px;
-            background-color: #1e293b;
-            padding: 10px;
-            border-radius: 12px;
-        }
-        .header-cell {
-            background-color: #f59e0b;
-            color: #000;
-            font-weight: bold;
-            padding: 10px 0;
-            border-radius: 6px;
-            font-size: 18px;
-        }
-        .cell {
-            background-color: #334155;
-            border-radius: 6px;
-            padding: 12px 0;
-            font-weight: bold;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .cell.marked {
-            background-color: #10b981;
-            color: #ffffff;
-            box-shadow: 0 0 10px #10b981;
-        }
-        .cell.free {
-            background-color: #ef4444;
-            color: white;
-        }
-        
-        .action-btn {
-            margin-top: 15px;
-            width: 100%;
-            padding: 14px;
-            border-radius: 10px;
-            font-weight: bold;
-            font-size: 18px;
-            border: none;
-            cursor: pointer;
-        }
-        .bingo-btn {
-            background-color: #eab308;
-            color: #000;
-            box-shadow: 0 0 15px #eab308;
-        }
-        .back-btn {
-            background-color: #475569;
-            color: white;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-    </style>
-</head>
-<body>
+# Demo bingo using points only. No real-money deposits, wagers, or cash-outs.
+TOKEN = "8944140702:AAF_J8e_saDp1gVtGA-WJC4f0mtu4xFl3DI"
+DB_PATH = os.getenv("DB_PATH", "bingo_users.db")
+PLAY_COST = 10
+STARTING_POINTS = 100
 
-    <div id="selectionScreen">
-        <h2>🎯 ሴዱ ቢንጎ (SEDOO BINGO) 🎰</h2>
-        <div class="sub-title">ለመጫወት ከ 1 እስከ 150 ያሉት ካርቴላዎችን ይምረጡ፦</div>
-        <div class="cards-grid" id="cardsGrid"></div>
-    </div>
+if not TOKEN:
+    raise RuntimeError("BOT_TOKEN is missing. Add your Telegram bot token in Render Environment Variables.")
 
-    <div id="gameScreen">
-        <h3 id="cardTitle">ካርቴላ #1</h3>
-        
-        <div class="caller-box">
-            <div style="font-size: 12px; color: #94a3b8;">የተጠራው ቁጥር</div>
-            <div class="called-number" id="calledNum">ይጠብቁ...</div>
-        </div>
+logging.basicConfig(level=logging.INFO)
+bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
+app = Flask(__name__)
 
-        <div class="bingo-board" id="bingoBoard"></div>
+def db():
+    conn = sqlite3.connect(DB_PATH, timeout=30)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-        <button class="action-btn bingo-btn" onclick="claimBingo()">🏆 ቢንጎ! (BINGO)</button>
-        <button class="action-btn back-btn" onclick="exitGame()">ወደ ካርቴላ መምረጫ ተመለስ</button>
-    </div>
+def init_db():
+    with db() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                user_id INTEGER PRIMARY KEY,
+                username TEXT,
+                full_name TEXT,
+                points INTEGER NOT NULL DEFAULT 100,
+                games_played INTEGER NOT NULL DEFAULT 0,
+                games_won INTEGER NOT NULL DEFAULT 0
+            )
+        """)
 
-    <script>
-        const cardsGrid = document.getElementById('cardsGrid');
-        const selectionScreen = document.getElementById('selectionScreen');
-        const gameScreen = document.getElementById('gameScreen');
-        const bingoBoard = document.getElementById('bingoBoard');
-        const calledNumDisplay = document.getElementById('calledNum');
-        const cardTitle = document.getElementById('cardTitle');
+def register_user(user):
+    full_name = " ".join(x for x in [user.first_name, user.last_name] if x)
+    with db() as conn:
+        conn.execute("""
+            INSERT INTO users (user_id, username, full_name, points)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                username=excluded.username,
+                full_name=excluded.full_name
+        """, (user.id, user.username, full_name, STARTING_POINTS))
 
-        let currentCardNumbers = [];
-        let gameInterval = null;
-        let gridState = Array(25).fill(false);
+def get_user(user_id):
+    with db() as conn:
+        return conn.execute("SELECT * FROM users WHERE user_id=?", (user_id,)).fetchone()
 
-        for (let i = 1; i <= 150; i++) {
-            let btn = document.createElement('button');
-            btn.className = 'card-btn';
-            btn.innerText = 'ካርቴላ ' + i;
-            btn.onclick = function() { startGame(i); };
-            cardsGrid.appendChild(btn);
-        }
+def change_points(user_id, delta):
+    with db() as conn:
+        conn.execute("UPDATE users SET points=points+? WHERE user_id=?", (delta, user_id))
 
-        function generateFixedNumbers(cardNum) {
-            let numbers = [];
-            let b = getPseudoRandom(cardNum * 1, 1, 15, 5);
-            let i = getPseudoRandom(cardNum * 2, 16, 30, 5);
-            let n = getPseudoRandom(cardNum * 3, 31, 45, 5);
-            let g = getPseudoRandom(cardNum * 4, 46, 60, 5);
-            let o = getPseudoRandom(cardNum * 5, 61, 75, 5);
+def main_keyboard():
+    kb = InlineKeyboardMarkup(row_width=2)
+    kb.add(
+        InlineKeyboardButton("🎱 Play Bingo (10 points)", callback_data="play"),
+        InlineKeyboardButton("💰 My Points", callback_data="balance"),
+    )
+    kb.add(
+        InlineKeyboardButton("📊 My Stats", callback_data="stats"),
+        InlineKeyboardButton("ℹ️ How to Play", callback_data="help"),
+    )
+    return kb
 
-            for (let r = 0; r < 5; r++) {
-                numbers.push(b[r]);
-                numbers.push(i[r]);
-                numbers.push(r === 2 ? "⭐" : n[r]);
-                numbers.push(g[r]);
-                numbers.push(o[r]);
-            }
-            return numbers;
-        }
+def make_card():
+    columns = [
+        random.sample(range(1, 16), 5),
+        random.sample(range(16, 31), 5),
+        random.sample(range(31, 46), 5),
+        random.sample(range(46, 61), 5),
+        random.sample(range(61, 76), 5),
+    ]
+    card = [[columns[c][r] for c in range(5)] for r in range(5)]
+    card[2][2] = "★"
+    return card
 
-        function getPseudoRandom(seed, min, max, count) {
-            let res = [];
-            let current = seed;
-            while (res.length < count) {
-                current = (current * 9301 + 49297) % 233280;
-                let rnd = min + Math.floor((current / 233280) * (max - min + 1));
-                if (!res.includes(rnd)) res.push(rnd);
-            }
-            return res;
-        }
+def render_card(card, called):
+    labels = ["B", "I", "N", "G", "O"]
+    lines = ["<b>B   I   N   G   O</b>"]
+    for row in card:
+        cells = []
+        for value in row:
+            if value == "★":
+                cells.append("★")
+            elif value in called:
+                cells.append(f"<b>✓{value}</b>")
+            else:
+                cells.append(str(value))
+        lines.append("  ".join(f"{v:>3}" for v in cells))
+    return "<pre>" + "\n".join(lines) + "</pre>"
 
-        // ቁጥሩን በአማርኛ ድምፅ ማንበብ
-        function speakNumber(num) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                let msg = new SpeechSynthesisUtterance(num.toString());
-                msg.rate = 0.9;
-                msg.pitch = 0.8; // የወንድ ድምፅ ውፍረት
-                msg.lang = 'am-ET'; // የድምፅ ቋንቋ ወደ አማርኛ ተቀይሯል
-                window.speechSynthesis.speak(msg);
-            }
-        }
+def has_bingo(card, called):
+    def marked(v):
+        return v == "★" or v in called
+    for row in card:
+        if all(marked(v) for v in row):
+            return True
+    for c in range(5):
+        if all(marked(card[r][c]) for r in range(5)):
+            return True
+    if all(marked(card[i][i]) for i in range(5)):
+        return True
+    if all(marked(card[i][4-i]) for i in range(5)):
+        return True
+    return False
 
-        function startGame(cardNum) {
-            selectionScreen.style.display = "none";
-            gameScreen.style.display = "block";
-            cardTitle.innerText = "🎰 ሴዱ ቢንጎ - ካርቴላ #" + cardNum;
+def new_game_text(card, called, latest=None):
+    msg = "🎱 <b>Your Bingo Card</b>\n"
+    if latest is not None:
+        msg += f"\n🔢 Number drawn: <b>{latest}</b>\n"
+    msg += "\n" + render_card(card, called)
+    msg += "\nNumbers are drawn one at a time. Complete a row, column, or diagonal to win 20 points."
+    return msg
 
-            bingoBoard.innerHTML = "";
-            gridState = Array(25).fill(false);
-            gridState[12] = true; // FREE space
+@bot.message_handler(commands=["start"])
+def start(message):
+    register_user(message.from_user)
+    bot.send_message(
+        message.chat.id,
+        "🎉 <b>Welcome to Adwa Bingo!</b>\n\n"
+        "Play with free demo points only. Points have no cash value and cannot be deposited or withdrawn.\n"
+        f"You start with <b>{STARTING_POINTS} points</b>.\n\nChoose an option:",
+        reply_markup=main_keyboard()
+    )
 
-            let headers = ['B', 'I', 'N', 'G', 'O'];
-            headers.forEach(h => {
-                let cell = document.createElement('div');
-                cell.className = 'header-cell';
-                cell.innerText = h;
-                bingoBoard.appendChild(cell);
-            });
+@bot.message_handler(commands=["help"])
+def help_command(message):
+    bot.send_message(
+        message.chat.id,
+        "🎱 <b>How to play</b>\n"
+        f"• Each game costs {PLAY_COST} points.\n"
+        "• A random number is drawn each turn.\n"
+        "• Complete a row, column, or diagonal to win 20 points.\n"
+        "• If you run out of points, use /daily to claim 20 free points once every 24 hours.\n"
+        "• Demo points have no cash value and cannot be exchanged for money."
+    )
 
-            currentCardNumbers = generateFixedNumbers(cardNum);
+@bot.message_handler(commands=["daily"])
+def daily(message):
+    register_user(message.from_user)
+    with db() as conn:
+        cols = [r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+        if "last_daily" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN last_daily INTEGER NOT NULL DEFAULT 0")
+        user = conn.execute("SELECT points, last_daily FROM users WHERE user_id=?", (message.from_user.id,)).fetchone()
+        import time
+        now = int(time.time())
+        if now - user["last_daily"] < 86400:
+            remaining = 86400 - (now - user["last_daily"])
+            hours = remaining // 3600
+            minutes = (remaining % 3600) // 60
+            bot.send_message(message.chat.id, f"⏳ Daily points already claimed. Try again in about {hours}h {minutes}m.")
+            return
+        conn.execute("UPDATE users SET points=points+20, last_daily=? WHERE user_id=?", (now, message.from_user.id))
+    bot.send_message(message.chat.id, "🎁 You received 20 free demo points!", reply_markup=main_keyboard())
 
-            currentCardNumbers.forEach((num, index) => {
-                let cell = document.createElement('div');
-                cell.className = 'cell';
-                cell.id = 'cell-' + index;
-                cell.innerText = num;
-                if (num === "⭐") cell.classList.add('marked', 'free');
-                bingoBoard.appendChild(cell);
-            });
+@bot.callback_query_handler(func=lambda call: True)
+def callbacks(call):
+    user_id = call.from_user.id
+    register_user(call.from_user)
+    user = get_user(user_id)
 
-            startCallingNumbers();
-        }
+    if call.data == "balance":
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id, f"💰 You have <b>{user['points']} demo points</b>.")
+    elif call.data == "stats":
+        bot.answer_callback_query(call.id)
+        bot.send_message(
+            call.message.chat.id,
+            f"📊 <b>Your stats</b>\nGames played: {user['games_played']}\nBingo wins: {user['games_won']}\nPoints: {user['points']}"
+        )
+    elif call.data == "help":
+        bot.answer_callback_query(call.id)
+        help_command(call.message)
+    elif call.data == "play":
+        bot.answer_callback_query(call.id)
+        if user["points"] < PLAY_COST:
+            bot.send_message(call.message.chat.id, "You need 10 demo points to play. Use /daily to claim free points.")
+            return
+        change_points(user_id, -PLAY_COST)
+        with db() as conn:
+            conn.execute("UPDATE users SET games_played=games_played+1 WHERE user_id=?", (user_id,))
+        card = make_card()
+        called = []
+        game_kb = InlineKeyboardMarkup()
+        game_kb.add(InlineKeyboardButton("🔢 Draw next number", callback_data="draw"))
+        game_kb.add(InlineKeyboardButton("🏠 Main menu", callback_data="menu"))
+        active_games[user_id] = {"card": card, "called": called}
+        bot.send_message(call.message.chat.id, new_game_text(card, called), reply_markup=game_kb)
+    elif call.data == "draw":
+        bot.answer_callback_query(call.id)
+        game = active_games.get(user_id)
+        if not game:
+            bot.send_message(call.message.chat.id, "No active game. Press Play Bingo to start a new game.", reply_markup=main_keyboard())
+            return
+        remaining = [n for n in range(1, 76) if n not in game["called"]]
+        if not remaining:
+            bot.send_message(call.message.chat.id, "All numbers were drawn. Start a new game from the menu.", reply_markup=main_keyboard())
+            active_games.pop(user_id, None)
+            return
+        number = random.choice(remaining)
+        game["called"].append(number)
+        card = game["card"]
+        called = game["called"]
+        if has_bingo(card, called):
+            change_points(user_id, 20)
+            with db() as conn:
+                conn.execute("UPDATE users SET games_won=games_won+1 WHERE user_id=?", (user_id,))
+            active_games.pop(user_id, None)
+            bot.send_message(
+                call.message.chat.id,
+                "🏆 <b>BINGO! You won 20 demo points!</b>\n\n" + new_game_text(card, called, number),
+                reply_markup=main_keyboard()
+            )
+        elif len(called) >= 50:
+            active_games.pop(user_id, None)
+            bot.send_message(call.message.chat.id, new_game_text(card, called, number) + "\n\nGame ended. Try again!", reply_markup=main_keyboard())
+        else:
+            game_kb = InlineKeyboardMarkup()
+            game_kb.add(InlineKeyboardButton("🔢 Draw next number", callback_data="draw"))
+            game_kb.add(InlineKeyboardButton("🏠 Main menu", callback_data="menu"))
+            bot.send_message(call.message.chat.id, new_game_text(card, called, number), reply_markup=game_kb)
+    elif call.data == "menu":
+        bot.answer_callback_query(call.id)
+        active_games.pop(user_id, None)
+        bot.send_message(call.message.chat.id, "🏠 Main menu:", reply_markup=main_keyboard())
+    else:
+        bot.answer_callback_query(call.id, "Unknown option")
 
-        // በየ 2 ሴኮንዱ ቁጥር መጥራት
-        function startCallingNumbers() {
-            let availableNumbers = Array.from({length: 75}, (_, i) => i + 1);
+active_games = {}
 
-            if (gameInterval) clearInterval(gameInterval);
+@app.get("/")
+def health():
+    return "Adwa Bingo bot is running (demo points only).", 200
 
-            gameInterval = setInterval(() => {
-                if (availableNumbers.length === 0) {
-                    clearInterval(gameInterval);
-                    return;
-                }
-                let randomIndex = Math.floor(Math.random() * availableNumbers.length);
-                let drawnNum = availableNumbers.splice(randomIndex, 1)[0];
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}, 200
 
-                calledNumDisplay.innerText = drawnNum;
-                speakNumber(drawnNum); // የአማርኛ ድምፅ ጥሪ
+def run_web():
+    port = int(os.getenv("PORT", "10000"))
+    app.run(host="0.0.0.0", port=port)
 
-                currentCardNumbers.forEach((num, idx) => {
-                    if (num === drawnNum) {
-                        let cell = document.getElementById('cell-' + idx);
-                        if (cell) cell.classList.add('marked');
-                        gridState[idx] = true;
-                    }
-                });
-
-            }, 2000); // 2 ሴኮንድ
-        }
-
-        // 2 መስመር መዘጋቱን ማረጋገጥ
-        function checkBingo() {
-            let lines = 0;
-            //Rows (አግድም)
-            for (let r = 0; r < 5; r++) {
-                if ([0,1,2,3,4].every(c => gridState[r*5 + c])) lines++;
-            }
-            //Cols (ቁመት)
-            for (let c = 0; c < 5; c++) {
-                if ([0,1,2,3,4].every(r => gridState[r*5 + c])) lines++;
-            }
-            //Diagonals (ዲያጎናል)
-            if ([0,6,12,18,24].every(i => gridState[i])) lines++;
-            if ([4,8,12,16,20].every(i => gridState[i])) lines++;
-
-            return lines >= 2;
-        }
-
-        function claimBingo() {
-            if (checkBingo()) {
-                if (gameInterval) clearInterval(gameInterval);
-                alert("🎉 ቢንጎ! እንኳን ደስ አለዎት አሸንፈዋል!\n\nየአሸናፊነት ሽልማትዎ ወደ አካውንትዎ ገቢ ሆኗል።");
-                exitGame();
-            } else {
-                alert("❌ ገና 2 መስመር አልሞላዎትም! ጨዋታውን ይቀጥሉ፤");
-            }
-        }
-
-        function exitGame() {
-            if (gameInterval) clearInterval(gameInterval);
-            gameScreen.style.display = "none";
-            selectionScreen.style.display = "block";
-            calledNumDisplay.innerText = "ይጠብቁ...";
-        }
-
-        window.Telegram.WebApp.ready();
-    </script>
-</body>
-</html>
+if __name__ == "__main__":
+    init_db()
+    with db() as conn:
+        cols = [r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+        if "last_daily" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN last_daily INTEGER NOT NULL DEFAULT 0")
+    threading.Thread(target=run_web, daemon=True).start()
+    logging.info("Starting Adwa Bingo polling bot")
+    bot.infinity_polling(skip_pending=True, timeout=30, long_polling_timeout=30)
