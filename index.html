@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADWA Bingo</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  :root {
+    --bg-dark: #0a0f1d;
+    --card-bg: #131b2e;
+    --accent-yellow: #f59e0b;
+    --accent-green: #10b981;
+    --accent-blue: #3b82f6;
+    --text-white: #ffffff;
+    --text-gray: #94a3b8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+  body { background: var(--bg-dark); color: var(--text-white); padding-bottom: 70px; }
+
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0f172a; border-bottom: 1px solid #1e293b; }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 40px; height: 40px; background: var(--accent-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+  .wallet-box { text-align: right; }
+  .wallet-title { font-size: 11px; color: var(--text-gray); }
+  .wallet-val { color: var(--accent-green); font-weight: bold; font-size: 15px; }
+
+  /* Screens */
+  .screen { display: none; padding: 15px; }
+  .screen.active { display: block; }
+
+  /* Navigation Bar */
+  .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: #0f172a; border-top: 1px solid #1e293b; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
+  .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-gray); font-size: 12px; cursor: pointer; text-decoration: none; }
+  .nav-item.active { color: var(--accent-yellow); }
+  .nav-item i { font-size: 18px; margin-bottom: 4px; }
+
+  /* Lobby / Home Screen */
+  .action-banner { background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; border: 1px solid #4338ca; }
+  .action-banner h2 { color: #facc15; font-size: 22px; margin-bottom: 5px; }
+  .open-cartela-btn { background: var(--accent-yellow); color: #000; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; font-size: 15px; margin-top: 15px; cursor: pointer; }
+
+  .medeb-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .medeb-card { background: var(--card-bg); border-radius: 12px; padding: 15px; text-align: center; border: 1px solid #1e293b; position: relative; }
+  .medeb-badge { position: absolute; top: 10px; right: 10px; background: var(--accent-blue); font-size: 10px; padding: 2px 6px; border-radius: 4px; }
+  .medeb-amount { font-size: 28px; font-weight: bold; margin: 10px 0; }
+  .medeb-stats { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-gray); margin-bottom: 12px; }
+  .join-btn { width: 100%; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+
+  /* Selection Screen Grid */
+  .cartela-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-height: 350px; overflow-y: auto; background: var(--card-bg); padding: 8px; border-radius: 8px; }
+  .grid-num { background: #1e293b; border-radius: 4px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; }
+  .grid-num.selected { background: var(--accent-green); color: white; }
+
+  /* Gameplay Screen */
+  .called-box { background: var(--card-bg); border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 15px; border: 1px solid var(--accent-yellow); }
+  .big-number { font-size: 38px; font-weight: bold; color: var(--accent-yellow); }
+  
+  .bingo-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; background: var(--card-bg); padding: 10px; border-radius: 12px; }
+  .b-cell { background: #1e293b; height: 48px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; }
+  .b-cell.header { background: var(--accent-blue); color: white; font-size: 18px; }
+  .b-cell.marked { background: var(--accent-green); color: white; box-shadow: 0 0 10px var(--accent-green); }
+  .b-cell.free { background: var(--accent-yellow); color: black; }
+
+  /* Deposit Screen */
+  .method-card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #1e293b; }
+  .method-info h4 { font-size: 15px; }
+  .method-info p { font-size: 12px; color: var(--text-gray); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="user-info">
+    <div class="avatar" id="avatarLetter">S</div>
+    <div>
+      <div style="font-weight: bold; font-size: 14px;" id="userNameDisplay">SEDOO</div>
+      <div style="font-size: 10px; color: var(--text-gray);">PLAYER</div>
+    </div>
+  </div>
+  <div class="wallet-box">
+    <div class="wallet-title">Wallet</div>
+    <div class="wallet-val" id="walletBal">100 ETB</div>
+  </div>
+</div>
+
+<!-- LOBBY SCREEN -->
+<div id="gamesScreen" class="screen active">
+  <div class="action-banner">
+    <span style="color: var(--accent-green); font-size: 12px;">● LIVE BINGO</span>
+    <h2>JOIN NEXT GAME</h2>
+    <p style="font-size: 12px; color: var(--text-gray);">Pick your Cartela now!</p>
+    <button class="open-cartela-btn" onclick="switchScreen('selectionScreen')">OPEN CARTELA ➔</button>
+  </div>
+
+  <h3 style="font-size: 14px; margin-bottom: 10px; color: var(--text-gray);">SELECT MEDEB</h3>
+  <div class="medeb-grid">
+    <div class="medeb-card">
+      <span class="medeb-badge">ETB</span>
+      <div class="medeb-amount">10</div>
+      <div class="medeb-stats">
+        <span>DERASH: <b style="color: var(--accent-yellow);">20 ETB</b></span>
+        <span>PLAYERS: <b>2</b></span>
+      </div>
+      <button class="join-btn" onclick="switchScreen('selectionScreen')">Join Match 🔥</button>
+    </div>
+    <div class="medeb-card">
+      <span class="medeb-badge">ETB</span>
+      <div class="medeb-amount">20</div>
+      <div class="medeb-stats">
+        <span>DERASH: <b style="color: var(--accent-yellow);">40 ETB</b></span>
+        <span>PLAYERS: <b>0</b></span>
+      </div>
+      <button class="join-btn" onclick="switchScreen('selectionScreen')">Join Match 🔥</button>
+    </div>
+  </div>
+</div>
+
+<!-- CARTELA SELECTION SCREEN -->
+<div id="selectionScreen" class="screen">
+  <h3 style="margin-bottom: 10px;">TAP TO PICK CARTELA</h3>
+  <div class="cartela-grid" id="selectionGrid"></div>
+  <button class="open-cartela-btn" style="width: 100%; margin-top: 15px;" onclick="startGameplay()">PLAY NOW 🎮</button>
+</div>
+
+<!-- GAMEPLAY SCREEN -->
+<div id="gameplayScreen" class="screen">
+  <div class="called-box">
+    <div style="font-size: 12px; color: var(--text-gray);">LAST CALLED NUMBER</div>
+    <div class="big-number" id="calledNumDisplay">--</div>
+  </div>
+
+  <div class="bingo-board" id="boardGrid"></div>
+  
+  <button class="open-cartela-btn" style="width: 100%; margin-top: 15px; background: var(--accent-yellow);" onclick="checkBingo()">🏆 BINGO!</button>
+</div>
+
+<!-- DEPOSIT SCREEN -->
+<div id="depositScreen" class="screen">
+  <h3 style="margin-bottom: 15px;">Deposit Funds</h3>
+  <div class="method-card">
+    <div class="method-info">
+      <h4>Commercial Bank of Ethiopia</h4>
+      <p>Min: 20 ETB</p>
+    </div>
+    <i class="fa-solid fa-chevron-right" style="color: var(--text-gray);"></i>
+  </div>
+  <div class="method-card">
+    <div class="method-info">
+      <h4>Telebirr</h4>
+      <p>Min: 20 ETB</p>
+    </div>
+    <i class="fa-solid fa-chevron-right" style="color: var(--text-gray);"></i>
+  </div>
+</div>
+
+<!-- BOTTOM NAVIGATION -->
+<div class="nav-bar">
+  <div class="nav-item active" onclick="switchScreen('gamesScreen')">
+    <i class="fa-solid fa-gamepad"></i>
+    <span>Games</span>
+  </div>
+  <div class="nav-item" onclick="switchScreen('depositScreen')">
+    <i class="fa-solid fa-wallet"></i>
+    <span>Deposit</span>
+  </div>
+  <div class="nav-item" onclick="alert('Leaderboard coming soon!')">
+    <i class="fa-solid fa-trophy"></i>
+    <span>Leaderboard</span>
+  </div>
+</div>
+
+<script>
+  let selectedCartela = 1;
+  let audioPlayer = new Audio();
+
+  // 150 Cartela Selection Grid
+  const gridContainer = document.getElementById("selectionGrid");
+  for (let i = 1; i <= 150; i++) {
+    const el = document.createElement("div");
+    el.className = "grid-num";
+    el.innerText = i;
+    el.onclick = () => {
+      document.querySelectorAll('.grid-num').forEach(c => c.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedCartela = i;
+    };
+    gridContainer.appendChild(el);
+  }
+
+  function switchScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  function startGameplay() {
+    switchScreen('gameplayScreen');
+    renderBoard();
+    startCalling();
+  }
+
+  function renderBoard() {
+    const board = document.getElementById('boardGrid');
+    board.innerHTML = '';
+    ['B','I','N','G','O'].forEach(h => {
+      board.innerHTML += `<div class="b-cell header">${h}</div>`;
+    });
+    for(let i=0; i<25; i++) {
+      if(i === 12) {
+        board.innerHTML += `<div class="b-cell free">⭐</div>`;
+      } else {
+        board.innerHTML += `<div class="b-cell" onclick="this.classList.toggle('marked')">${Math.floor(Math.random()*15) + 1 + (i%5)*15}</div>`;
+      }
+    }
+  }
+
+  function startCalling() {
+    setInterval(() => {
+      let num = Math.floor(Math.random() * 75) + 1;
+      document.getElementById('calledNumDisplay').innerText = num;
+      // Google TTS Voice calling
+      audioPlayer.src = `https://translate.google.com/translate_tts?ie=UTF-8&q=${num}&tl=en&client=tw-ob`;
+      audioPlayer.play().catch(() => {});
+    }, 4000);
+  }
+
+  function checkBingo() {
+    alert("🎉 BINGO Claimed! Verifying with server...");
+  }
+
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.ready();
+    window.Telegram.WebApp.expand();
+  }
+</script>
+</body>
+</html>
