@@ -3,24 +3,21 @@ import sqlite3
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from flask import Flask, send_from_directory
+import threading
 
-# 📌 1. የቴሌግራም ቶከን
-TOKEN = os.environ.get("BOT_TOKEN", "8944140702:AAF_J8e_saDp1gVtGA-WJC4f0mtu4xFl3DI").strip()
+TOKEN = "8944140702:AAF_J8e_saDp1gVtGA-WJC4f0mtu4xFl3DI"
 bot = telebot.TeleBot(TOKEN, parse_mode="HTML")
 
-# 📌 2. Flask Web App (Render ሰርቨር እና index.html ማስተናገጃ)
 app = Flask(__name__, static_folder='.')
 
 @app.route('/')
 def serve_index():
-    # Mini App ገጹን index.html ያሳያል
     return send_from_directory('.', 'index.html')
 
 @app.route('/health')
 def health():
     return "OK", 200
 
-# 📌 3. ዳታቤዝ ማዘጋጀት
 DB_PATH = "bingo_users.db"
 
 def init_db():
@@ -31,13 +28,12 @@ def init_db():
             user_id INTEGER PRIMARY KEY,
             username TEXT,
             full_name TEXT,
-            balance REAL DEFAULT 100.0
+            balance REAL DEFAULT 140.0
         )
     """)
     conn.commit()
     conn.close()
 
-# 📌 4. የ Start Command አሰራር (Mini App አዝራር ያለው)
 @bot.message_handler(commands=['start'])
 def start_command(message):
     user_id = message.from_user.id
@@ -51,8 +47,6 @@ def start_command(message):
     conn.commit()
     conn.close()
 
-    # የ Render URL ወይም የ WebApp አድራሻ (index.html ገጽ የሚያስከፍት)
-    # በ Render ላይ ያለህ የዌብሳይት አድራሻ
     web_app_url = os.environ.get("RENDER_EXTERNAL_URL", "https://addis-bingo-1-4zld.onrender.com")
 
     markup = InlineKeyboardMarkup()
@@ -75,9 +69,9 @@ def run_flask():
 
 if __name__ == "__main__":
     init_db()
-    # Flask ን በሁለተኛ Thread ማሸጋገር
-    import threading
     threading.Thread(target=run_flask, daemon=True).start()
     
-    print("Adwa Bingo Bot & Mini App backend running...")
+    # የድሮ ዌብሁኮችን እና ማጣሪያዎችን ለማጥፋት
+    bot.remove_webhook()
+    print("Adwa Bingo Bot & Mini App backend running smoothly...")
     bot.infinity_polling(skip_pending=True)
