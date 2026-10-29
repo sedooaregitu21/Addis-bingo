@@ -3,340 +3,261 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ADWA Bingo Mini App</title>
+<title>SEDOO Bingo Mini App</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-  :root {
-    --bg-dark: #0a0f1d;
-    --card-bg: #131b2e;
-    --accent-yellow: #f59e0b;
-    --accent-green: #10b981;
-    --accent-blue: #3b82f6;
-    --text-white: #ffffff;
-    --text-gray: #94a3b8;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-  body { background: var(--bg-dark); color: var(--text-white); padding-bottom: 70px; }
-
-  .header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #0f172a; border-bottom: 1px solid #1e293b; }
-  .user-info { display: flex; align-items: center; gap: 10px; }
-  .avatar { width: 40px; height: 40px; background: var(--accent-green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
-  .wallet-box { text-align: right; }
-  .wallet-title { font-size: 11px; color: var(--text-gray); }
-  .wallet-val { color: var(--accent-green); font-weight: bold; font-size: 15px; }
-
-  .screen { display: none; padding: 15px; }
-  .screen.active { display: block; }
-
-  .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: #0f172a; border-top: 1px solid #1e293b; display: flex; justify-content: space-around; align-items: center; z-index: 1000; }
-  .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-gray); font-size: 12px; cursor: pointer; }
-  .nav-item.active { color: var(--accent-yellow); }
-  .nav-item i { font-size: 18px; margin-bottom: 4px; }
-
-  .action-banner { background: linear-gradient(135deg, #1e1b4b, #312e81); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px; border: 1px solid #4338ca; }
-  .action-banner h2 { color: #facc15; font-size: 22px; margin-bottom: 5px; }
-  .open-cartela-btn { background: var(--accent-yellow); color: #000; border: none; padding: 12px 25px; border-radius: 25px; font-weight: bold; font-size: 15px; margin-top: 15px; cursor: pointer; }
-
-  .medeb-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 15px; }
-  .medeb-card { background: var(--card-bg); border-radius: 12px; padding: 15px; text-align: center; border: 1px solid #1e293b; position: relative; }
-  .medeb-badge { position: absolute; top: 10px; right: 10px; background: var(--accent-blue); font-size: 10px; padding: 2px 6px; border-radius: 4px; }
-  .medeb-amount { font-size: 26px; font-weight: bold; margin: 10px 0; color: var(--accent-yellow); }
-  .medeb-stats { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-gray); margin-bottom: 12px; }
-  .join-btn { width: 100%; background: #1e293b; color: #fff; border: 1px solid #334155; padding: 8px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-
-  .cartela-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-height: 250px; overflow-y: auto; background: var(--card-bg); padding: 8px; border-radius: 8px; }
-  .grid-num { background: #1e293b; border-radius: 4px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; cursor: pointer; }
-  .grid-num.selected { background: var(--accent-green); color: white; border: 2px solid #fff; }
-
-  .called-container { background: var(--card-bg); border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 15px; border: 1px solid var(--accent-yellow); }
-  .big-number { font-size: 32px; font-weight: bold; color: var(--accent-yellow); }
-  .recent-list { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
-  .recent-badge { background: #1e293b; padding: 4px 8px; border-radius: 6px; font-size: 12px; color: var(--accent-green); border: 1px solid var(--accent-blue); }
-
-  .timer-box { font-size: 13px; color: var(--accent-yellow); font-weight: bold; margin-bottom: 10px; background: #1e293b; padding: 6px; border-radius: 6px; text-align: center; }
-
-  .bingo-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; background: var(--card-bg); padding: 8px; border-radius: 12px; margin-bottom: 15px; }
-  .b-cell { background: #334155; height: 38px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; cursor: pointer; }
-  .b-cell.header { background: var(--accent-blue); color: white; font-size: 15px; }
-  .b-cell.marked { background: var(--accent-green); color: white; box-shadow: 0 0 6px var(--accent-green); }
-  .b-cell.free { background: var(--accent-yellow); color: black; }
-
-  .method-card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 10px; border: 1px solid #1e293b; }
-  .bank-details { font-size: 13px; color: var(--accent-yellow); margin-top: 6px; background: #0f172a; padding: 8px; border-radius: 6px; }
-  .input-field { width: 100%; padding: 10px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; margin-top: 8px; font-size: 13px; }
-  .action-form-btn { background: var(--accent-green); color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13px; margin-top: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+  :root { --bg-dark:#0a0f1d; --card-bg:#131b2e; --accent-yellow:#f59e0b; --accent-green:#10b981; --accent-blue:#3b82f6; --text-white:#fff; --text-gray:#94a3b8; }
+  * { box-sizing:border-box; margin:0; padding:0; font-family:Arial,sans-serif; }
+  body { background:var(--bg-dark); color:var(--text-white); padding-bottom:75px; }
+  .header { display:flex; justify-content:space-between; align-items:center; padding:15px; background:#0f172a; border-bottom:1px solid #1e293b; }
+  .user-info { display:flex; align-items:center; gap:10px; }
+  .avatar { width:40px; height:40px; background:var(--accent-green); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:18px; }
+  .wallet-box { text-align:right; } .wallet-title { font-size:11px; color:var(--text-gray); } .wallet-val { color:var(--accent-green); font-weight:bold; font-size:15px; }
+  .screen { display:none; padding:15px; } .screen.active { display:block; }
+  .nav-bar { position:fixed; bottom:0; left:0; right:0; height:65px; background:#0f172a; border-top:1px solid #1e293b; display:flex; justify-content:space-around; align-items:center; z-index:1000; }
+  .nav-item { display:flex; flex-direction:column; align-items:center; color:var(--text-gray); font-size:12px; cursor:pointer; } .nav-item.active { color:var(--accent-yellow); } .nav-item i { font-size:18px; margin-bottom:4px; }
+  .action-banner { background:linear-gradient(135deg,#1e1b4b,#312e81); border-radius:16px; padding:20px; text-align:center; margin-bottom:20px; border:1px solid #4338ca; }
+  .action-banner h2 { color:#facc15; font-size:22px; margin:8px 0 5px; }
+  .open-cartela-btn { background:var(--accent-yellow); color:#000; border:none; padding:12px 25px; border-radius:25px; font-weight:bold; font-size:15px; margin-top:15px; cursor:pointer; }
+  .medeb-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:15px; }
+  .medeb-card { background:var(--card-bg); border-radius:12px; padding:15px; text-align:center; border:1px solid #1e293b; position:relative; }
+  .medeb-badge { position:absolute; top:10px; right:10px; background:var(--accent-blue); font-size:10px; padding:2px 6px; border-radius:4px; }
+  .medeb-amount { font-size:26px; font-weight:bold; margin:10px 0; color:var(--accent-yellow); }
+  .medeb-stats { display:flex; justify-content:space-between; gap:5px; font-size:11px; color:var(--text-gray); margin-bottom:12px; }
+  .join-btn { width:100%; background:#1e293b; color:#fff; border:1px solid #334155; padding:8px; border-radius:8px; font-weight:bold; cursor:pointer; }
+  .cartela-grid { display:grid; grid-template-columns:repeat(10,1fr); gap:4px; max-height:250px; overflow-y:auto; background:var(--card-bg); padding:8px; border-radius:8px; }
+  .grid-num { background:#1e293b; border-radius:4px; height:32px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:bold; cursor:pointer; }
+  .grid-num.selected { background:var(--accent-green); color:white; border:2px solid #fff; }
+  .called-container { background:var(--card-bg); border-radius:12px; padding:12px; text-align:center; margin-bottom:15px; border:1px solid var(--accent-yellow); }
+  .big-number { font-size:32px; font-weight:bold; color:var(--accent-yellow); margin:6px 0; }
+  .repeat-btn { background:#1e293b; color:white; border:1px solid var(--accent-blue); border-radius:8px; padding:8px 12px; margin-top:8px; cursor:pointer; }
+  .recent-list { display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .recent-badge { background:#1e293b; padding:4px 8px; border-radius:6px; font-size:12px; color:var(--accent-green); border:1px solid var(--accent-blue); }
+  .timer-box { font-size:13px; color:var(--accent-yellow); font-weight:bold; margin-bottom:10px; background:#1e293b; padding:6px; border-radius:6px; text-align:center; }
+  .bingo-board { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; background:var(--card-bg); padding:8px; border-radius:12px; margin-bottom:15px; }
+  .b-cell { background:#334155; min-height:42px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:14px; cursor:pointer; user-select:none; }
+  .b-cell.header { background:var(--accent-blue); color:white; font-size:15px; min-height:32px; cursor:default; }
+  .b-cell.marked { background:var(--accent-green); color:white; box-shadow:0 0 6px var(--accent-green); }
+  .b-cell.free { background:var(--accent-yellow); color:black; cursor:default; }
+  .method-card { background:var(--card-bg); border-radius:12px; padding:15px; margin-bottom:10px; border:1px solid #1e293b; }
+  .bank-details { font-size:13px; color:var(--accent-yellow); margin-top:6px; background:#0f172a; padding:8px; border-radius:6px; }
+  .input-field { width:100%; padding:10px; background:#0f172a; border:1px solid #334155; color:white; border-radius:6px; margin-top:8px; font-size:13px; }
+  .action-form-btn { background:var(--accent-green); color:white; border:none; padding:10px; border-radius:6px; font-size:13px; margin-top:8px; cursor:pointer; width:100%; font-weight:bold; }
+  .notice { color:var(--text-gray); font-size:12px; line-height:1.5; margin-top:10px; }
 </style>
 </head>
 <body>
-
 <div class="header">
-  <div class="user-info">
-    <div class="avatar">S</div>
-    <div>
-      <div style="font-weight: bold; font-size: 14px;">SEDOO</div>
-      <div style="font-size: 10px; color: var(--text-gray);">PLAYER</div>
-    </div>
-  </div>
-  <div class="wallet-box">
-    <div class="wallet-title">Wallet</div>
-    <div class="wallet-val" id="walletBal">140 ETB</div>
-  </div>
+  <div class="user-info"><div class="avatar">S</div><div><div style="font-weight:bold;font-size:14px;">SEDOO</div><div style="font-size:10px;color:var(--text-gray);">BINGO PLAYER</div></div></div>
+  <div class="wallet-box"><div class="wallet-title">Demo points</div><div class="wallet-val" id="walletBal">140 pts</div></div>
 </div>
 
-<!-- LOBBY SCREEN -->
 <div id="gamesScreen" class="screen active">
-  <div class="action-banner">
-    <span style="color: var(--accent-green); font-size: 12px;">● LIVE BINGO</span>
-    <h2>JOIN NEXT GAME</h2>
-    <p style="font-size: 12px; color: var(--text-gray);">Pick 1 up to 4 Cartelas!</p>
-    <button class="open-cartela-btn" onclick="switchScreen('selectionScreen')">OPEN CARTELA ➔</button>
-  </div>
-
-  <h3 style="font-size: 14px; margin-bottom: 5px; color: var(--text-gray);">SELECT MEDEB & DERASH</h3>
+  <div class="action-banner"><span style="color:var(--accent-green);font-size:12px;">● BINGO GAME</span><h2>SEDOO BINGO</h2><p style="font-size:12px;color:var(--text-gray);">Choose up to 4 cartelas and play for fun.</p><button class="open-cartela-btn" onclick="switchScreen('selectionScreen')">OPEN CARTELA ➔</button></div>
+  <h3 style="font-size:14px;margin-bottom:5px;color:var(--text-gray);">CHOOSE A DEMO ROOM</h3>
   <div class="medeb-grid">
-    <div class="medeb-card">
-      <span class="medeb-badge">ETB</span>
-      <div class="medeb-amount">10 ETB</div>
-      <div class="medeb-stats">
-        <span>DERASH: <b style="color: var(--accent-yellow);">20 ETB</b></span>
-        <span>PLAYERS: <b>3</b></span>
-      </div>
-      <button class="join-btn" onclick="switchScreen('selectionScreen')">Join Match 🔥</button>
-    </div>
-    <div class="medeb-card">
-      <span class="medeb-badge">ETB</span>
-      <div class="medeb-amount">20 ETB</div>
-      <div class="medeb-stats">
-        <span>DERASH: <b style="color: var(--accent-yellow);">40 ETB</b></span>
-        <span>PLAYERS: <b>1</b></span>
-      </div>
-      <button class="join-btn" onclick="switchScreen('selectionScreen')">Join Match 🔥</button>
-    </div>
+    <div class="medeb-card"><span class="medeb-badge">DEMO</span><div class="medeb-amount">Room 1</div><div class="medeb-stats"><span>FREE PLAY</span><span><b>Up to 4 cards</b></span></div><button class="join-btn" onclick="switchScreen('selectionScreen')">Join Game 🎮</button></div>
+    <div class="medeb-card"><span class="medeb-badge">DEMO</span><div class="medeb-amount">Room 2</div><div class="medeb-stats"><span>FREE PLAY</span><span><b>Up to 4 cards</b></span></div><button class="join-btn" onclick="switchScreen('selectionScreen')">Join Game 🎮</button></div>
   </div>
+  <p class="notice">Demo version: points are not money. No deposits, withdrawals, or cash prizes are processed.</p>
 </div>
 
-<!-- CARTELA SELECTION SCREEN -->
 <div id="selectionScreen" class="screen">
-  <h3 style="margin-bottom: 10px;">PICK CARTELAS (Selected: <span id="selectedCount">0</span>/4)</h3>
+  <h3 style="margin-bottom:10px;">PICK CARTELAS (Selected: <span id="selectedCount">0</span>/4)</h3>
   <div class="cartela-grid" id="selectionGrid"></div>
-  <button class="open-cartela-btn" style="width: 100%; margin-top: 15px;" onclick="startGameplay()">PLAY NOW 🎮</button>
+  <button class="open-cartela-btn" style="width:100%;margin-top:15px;" onclick="startGameplay()">PLAY NOW 🎮</button>
+  <button class="repeat-btn" style="width:100%;" onclick="switchScreen('gamesScreen')">← Back</button>
 </div>
 
-<!-- GAMEPLAY SCREEN -->
 <div id="gameplayScreen" class="screen">
-  <div class="timer-box">⏳ Game Starts / Next Call in: <span id="gameTimer">30</span>s</div>
-  
+  <div class="timer-box">⏳ Next number in: <span id="gameTimer">3</span>s</div>
   <div class="called-container">
-    <div style="font-size: 11px; color: var(--text-gray);">LAST CALLED NUMBER</div>
+    <div style="font-size:11px;color:var(--text-gray);">LAST CALLED NUMBER</div>
     <div class="big-number" id="calledNumDisplay">--</div>
-    <div style="font-size: 11px; color: var(--text-gray); margin-top: 5px;">RECENT CALLED NUMBERS:</div>
-    <div class="recent-list" id="recentList">
-      <span class="recent-badge">-</span>
-      <span class="recent-badge">-</span>
-      <span class="recent-badge">-</span>
-    </div>
+    <div id="calledWords" style="font-size:13px;color:var(--text-gray);"></div>
+    <button class="repeat-btn" onclick="repeatLastCall()">🔊 Repeat last number</button>
+    <div style="font-size:11px;color:var(--text-gray);margin-top:10px;">RECENT CALLED NUMBERS:</div>
+    <div class="recent-list" id="recentList"><span class="recent-badge">—</span></div>
   </div>
-
   <div id="activeBoardsContainer"></div>
-
-  <button class="open-cartela-btn" style="width: 100%; margin-top: 5px; background: var(--accent-yellow);" onclick="claimBingo()">🏆 BINGO!</button>
+  <button class="open-cartela-btn" style="width:100%;margin-top:5px;" onclick="claimBingo()">🏆 CHECK BINGO</button>
+  <button class="repeat-btn" style="width:100%;margin-top:8px;" onclick="endGame()">End game / Back</button>
+  <p class="notice">Numbers are marked automatically when called. You can also tap a square to mark/unmark it manually.</p>
 </div>
 
-<!-- DEPOSIT & WITHDRAW SCREEN -->
 <div id="depositScreen" class="screen">
-  <h3 style="margin-bottom: 15px;">Deposit & Withdraw Funds</h3>
-  
-  <div class="method-card">
-    <h4>Commercial Bank of Ethiopia (CBE)</h4>
-    <div class="bank-details">Acc: <b>1000745390448</b></div>
-    <input type="text" class="input-field" id="cbeAcc" placeholder="Enter your CBE Account/Name">
-    <button class="action-form-btn" onclick="submitTransaction('CBE')">Submit Deposit / Withdraw Request</button>
-  </div>
-
-  <div class="method-card">
-    <h4>Telebirr</h4>
-    <div class="bank-details">Acc: <b>0985177839</b></div>
-    <input type="text" class="input-field" id="teleAcc" placeholder="Enter your Telebirr Phone Number">
-    <button class="action-form-btn" onclick="submitTransaction('Telebirr')">Submit Deposit / Withdraw Request</button>
-  </div>
+  <h3 style="margin-bottom:15px;">Demo info</h3>
+  <div class="method-card"><h4>SEDOO BINGO</h4><p class="notice">This demo does not accept bank details, deposits, or withdrawal requests. Do not enter private financial information here.</p></div>
 </div>
 
-<!-- NAVIGATION -->
 <div class="nav-bar">
-  <div class="nav-item active" onclick="switchNav(this, 'gamesScreen')">
-    <i class="fa-solid fa-gamepad"></i>
-    <span>Games</span>
-  </div>
-  <div class="nav-item" onclick="switchNav(this, 'depositScreen')">
-    <i class="fa-solid fa-wallet"></i>
-    <span>Deposit</span>
-  </div>
+  <div class="nav-item active" onclick="switchNav(this,'gamesScreen')"><i class="fa-solid fa-gamepad"></i><span>Games</span></div>
+  <div class="nav-item" onclick="switchNav(this,'depositScreen')"><i class="fa-solid fa-circle-info"></i><span>Info</span></div>
 </div>
 
 <script>
-  let selectedCartelas = [];
-  let currentBalance = 140;
-  let gameInterval = null;
-  let timerInterval = null;
-  let calledHistory = [];
+let selectedCartelas = [];
+let currentBalance = 140;
+let gameInterval = null;
+let timerInterval = null;
+let calledHistory = [];
+let lastCalledNumber = null;
+let gameRunning = false;
 
-  const gridContainer = document.getElementById("selectionGrid");
-  for (let i = 1; i <= 150; i++) {
-    const el = document.createElement("div");
-    el.className = "grid-num";
-    el.innerText = i;
-    el.onclick = () => {
-      if (selectedCartelas.includes(i)) {
-        selectedCartelas = selectedCartelas.filter(c => c !== i);
-        el.classList.remove('selected');
-      } else {
-        if (selectedCartelas.length >= 4) {
-          alert("Osobola okulonda kartela 4 zokka!");
-          return;
-        }
-        selectedCartelas.push(i);
-        el.classList.add('selected');
-      }
-      document.getElementById('selectedCount').innerText = selectedCartelas.length;
-    };
-    gridContainer.appendChild(el);
-  }
-
-  function switchNav(el, id) {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    el.classList.add('active');
-    switchScreen(id);
-  }
-
-  function switchScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
-
-  function playSound(text) {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const msg = new SpeechSynthesisUtterance(text);
-      msg.lang = 'en-US';
-      window.speechSynthesis.speak(msg);
+const gridContainer = document.getElementById("selectionGrid");
+for (let i=1; i<=150; i++) {
+  const el = document.createElement("div");
+  el.className = "grid-num"; el.textContent = i;
+  el.onclick = () => {
+    if (selectedCartelas.includes(i)) {
+      selectedCartelas = selectedCartelas.filter(c => c !== i);
+      el.classList.remove("selected");
+    } else {
+      if (selectedCartelas.length >= 4) { alert("You can select up to 4 cartelas."); return; }
+      selectedCartelas.push(i); el.classList.add("selected");
     }
-  }
+    document.getElementById("selectedCount").textContent = selectedCartelas.length;
+  };
+  gridContainer.appendChild(el);
+}
 
-  function getLetter(num) {
-    if (num <= 15) return 'B';
-    if (num <= 30) return 'I';
-    if (num <= 45) return 'N';
-    if (num <= 60) return 'G';
-    return 'O';
+function switchNav(el,id) {
+  document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+  el.classList.add("active"); switchScreen(id);
+}
+function switchScreen(id) {
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function getLetter(num) {
+  if (num<=15) return "B";
+  if (num<=30) return "I";
+  if (num<=45) return "N";
+  if (num<=60) return "G";
+  return "O";
+}
+const numberWords = ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen","twenty","twenty-one","twenty-two","twenty-three","twenty-four","twenty-five","twenty-six","twenty-seven","twenty-eight","twenty-nine","thirty","thirty-one","thirty-two","thirty-three","thirty-four","thirty-five","thirty-six","thirty-seven","thirty-eight","thirty-nine","forty","forty-one","forty-two","forty-three","forty-four","forty-five","forty-six","forty-seven","forty-eight","forty-nine","fifty","fifty-one","fifty-two","fifty-three","fifty-four","fifty-five","fifty-six","fifty-seven","fifty-eight","fifty-nine","sixty","sixty-one","sixty-two","sixty-three","sixty-four","sixty-five","sixty-six","sixty-seven","sixty-eight","sixty-nine","seventy","seventy-one","seventy-two","seventy-three","seventy-four","seventy-five"];
+function speakCall(num) {
+  if (!("speechSynthesis" in window)) { alert("Audio speech is not supported by this browser."); return; }
+  window.speechSynthesis.cancel();
+  const msg = new SpeechSynthesisUtterance(`${getLetter(num)}, ${numberWords[num]}`);
+  msg.lang = "en-US"; msg.rate = 0.85;
+  window.speechSynthesis.speak(msg);
+}
+function repeatLastCall() {
+  if (lastCalledNumber === null) { alert("No number has been called yet."); return; }
+  speakCall(lastCalledNumber);
+}
+function makeCard(cardNum) {
+  // Repeatable card layout based on selected cartela number, with unique numbers per column.
+  let seed = cardNum * 7919;
+  function rand() { seed = (seed * 48271) % 2147483647; return seed / 2147483647; }
+  const cols = [];
+  for (let c=0; c<5; c++) {
+    const nums = Array.from({length:15},(_,i)=>c*15+i+1);
+    for (let i=nums.length-1;i>0;i--) { const j=Math.floor(rand()*(i+1)); [nums[i],nums[j]]=[nums[j],nums[i]]; }
+    cols.push(nums.slice(0,5));
   }
-
-  function startGameplay() {
-    if (selectedCartelas.length === 0) {
-      alert("Londawo akatono kartela emu!");
-      return;
-    }
-    let cost = selectedCartelas.length * 10;
-    if (currentBalance < cost) {
-      alert("Ensimbi eziri mu wallet tzimala!");
-      return;
-    }
-    currentBalance -= cost;
-    document.getElementById('walletBal').innerText = currentBalance + " ETB";
-    switchScreen('gameplayScreen');
-    renderBoards();
-    startTimer();
-    startCalling();
-  }
-
-  function startTimer() {
-    let timeLeft = 30;
-    document.getElementById('gameTimer').innerText = timeLeft;
-    if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(() => {
-      timeLeft--;
-      document.getElementById('gameTimer').innerText = timeLeft;
-      if (timeLeft <= 0) {
-        clearInterval(timerInterval);
-      }
-    }, 1000);
-  }
-
-  function renderBoards() {
-    const container = document.getElementById('activeBoardsContainer');
-    container.innerHTML = '';
-    selectedCartelas.forEach(cNum => {
-      let html = `<h4 style="margin: 3px 0; color: var(--accent-yellow); font-size: 13px;">CARTELA #${cNum}</h4>`;
-      html += `<div class="bingo-board" id="board-${cNum}">`;
-      ['B','I','N','G','O'].forEach(h => {
-        html += `<div class="b-cell header">${h}</div>`;
-      });
-      for (let i = 0; i < 25; i++) {
-        if (i === 12) {
-          html += `<div class="b-cell free marked">⭐</div>`;
-        } else {
-          let val = Math.floor(Math.random()*15) + 1 + (i%5)*15;
-          html += `<div class="b-cell num-${val}" onclick="this.classList.toggle('marked')">${val}</div>`;
-        }
-      }
-      html += `</div>`;
-      container.innerHTML += html;
+  const board = [];
+  for (let r=0;r<5;r++) for (let c=0;c<5;c++) board.push(r===2 && c===2 ? 0 : cols[c][r]);
+  return board;
+}
+function startGameplay() {
+  if (!selectedCartelas.length) { alert("Please select at least one cartela."); return; }
+  stopIntervals();
+  calledHistory = []; lastCalledNumber = null; gameRunning = true;
+  document.getElementById("calledNumDisplay").textContent = "--";
+  document.getElementById("calledWords").textContent = "";
+  document.getElementById("recentList").innerHTML = '<span class="recent-badge">—</span>';
+  switchScreen("gameplayScreen"); renderBoards(); callNextNumber(); startCalling();
+}
+function renderBoards() {
+  const container = document.getElementById("activeBoardsContainer");
+  container.innerHTML = "";
+  selectedCartelas.forEach(cNum => {
+    const title = document.createElement("h4");
+    title.style.cssText = "margin:8px 0 3px;color:var(--accent-yellow);font-size:13px";
+    title.textContent = `CARTELA #${cNum}`; container.appendChild(title);
+    const boardEl = document.createElement("div");
+    boardEl.className = "bingo-board"; boardEl.id = `board-${cNum}`;
+    ["B","I","N","G","O"].forEach(h=>{ const cell=document.createElement("div"); cell.className="b-cell header"; cell.textContent=h; boardEl.appendChild(cell); });
+    makeCard(cNum).forEach((val,index)=>{
+      const cell=document.createElement("div");
+      cell.className = "b-cell" + (val===0 ? " free marked" : "");
+      cell.dataset.number = val; cell.dataset.cartela = cNum;
+      cell.textContent = val===0 ? "⭐" : val;
+      if (val!==0) cell.onclick=()=>cell.classList.toggle("marked");
+      boardEl.appendChild(cell);
     });
+    container.appendChild(boardEl);
+  });
+}
+function callNextNumber() {
+  if (!gameRunning || calledHistory.length>=75) { stopIntervals(); return; }
+  let available=[];
+  for(let n=1;n<=75;n++) if(!calledHistory.includes(n)) available.push(n);
+  if(!available.length) { stopIntervals(); return; }
+  const num=available[Math.floor(Math.random()*available.length)];
+  calledHistory.push(num); lastCalledNumber=num;
+  const formatted=`${getLetter(num)}-${num}`;
+  document.getElementById("calledNumDisplay").textContent=formatted;
+  document.getElementById("calledWords").textContent=`${getLetter(num)} ${numberWords[num]}`;
+  document.querySelectorAll(".b-cell[data-number]").forEach(cell=>{
+    if(Number(cell.dataset.number)===num) cell.classList.add("marked");
+  });
+  const recentContainer=document.getElementById("recentList");
+  recentContainer.innerHTML="";
+  calledHistory.slice(-4).reverse().forEach(n=>{
+    const badge=document.createElement("span"); badge.className="recent-badge"; badge.textContent=`${getLetter(n)}-${n}`; recentContainer.appendChild(badge);
+  });
+  speakCall(num);
+}
+function startCalling() {
+  let seconds=3;
+  document.getElementById("gameTimer").textContent=seconds;
+  timerInterval=setInterval(()=>{
+    seconds--;
+    if(seconds<=0) { callNextNumber(); seconds=3; }
+    document.getElementById("gameTimer").textContent=seconds;
+  },1000);
+}
+function stopIntervals() {
+  if(gameInterval) clearInterval(gameInterval);
+  if(timerInterval) clearInterval(timerInterval);
+  gameInterval=null; timerInterval=null;
+}
+function hasWinningLine(cells) {
+  const marked = cells.map(c=>c.classList.contains("marked"));
+  const lines=[];
+  for(let r=0;r<5;r++) lines.push(Array.from({length:5},(_,c)=>r*5+c));
+  for(let c=0;c<5;c++) lines.push(Array.from({length:5},(_,r)=>r*5+c));
+  lines.push([0,6,12,18,24],[4,8,12,16,20]);
+  lines.push([0,4,20,24]); // four corners
+  return lines.some(line=>line.every(i=>marked[i]));
+}
+function claimBingo() {
+  const winners=[];
+  selectedCartelas.forEach(cNum=>{
+    const board=document.getElementById(`board-${cNum}`);
+    if(!board) return;
+    const cells=Array.from(board.querySelectorAll(".b-cell[data-number]"));
+    if(hasWinningLine(cells)) winners.push(cNum);
+  });
+  if(winners.length) {
+    gameRunning=false; stopIntervals();
+    window.speechSynthesis?.cancel();
+    alert(`🎉 BINGO! Winning cartela${winners.length>1?"s":""}: ${winners.join(", ")}. This is a demo result; no cash prize is paid.`);
+  } else {
+    alert("Not Bingo yet. Keep playing until a full row, column, diagonal, or four corners are marked.");
   }
-
-  function startCalling() {
-    if (gameInterval) clearInterval(gameInterval);
-    calledHistory = [];
-    gameInterval = setInterval(() => {
-      if (calledHistory.length >= 75) {
-        clearInterval(gameInterval);
-        return;
-      }
-      let num;
-      do {
-        num = Math.floor(Math.random() * 75) + 1;
-      } while (calledHistory.includes(num));
-
-      calledHistory.push(num);
-      let letter = getLetter(num);
-      let formatted = `${letter} ${num}`;
-
-      document.getElementById('calledNumDisplay').innerText = formatted;
-
-      let recent = calledHistory.slice(-4, -1).reverse();
-      const recentContainer = document.getElementById('recentList');
-      recentContainer.innerHTML = '';
-      recent.forEach(n => {
-        recentContainer.innerHTML += `<span class="recent-badge">${getLetter(n)} ${n}</span>`;
-      });
-
-      document.querySelectorAll(`.num-${num}`).forEach(el => {
-        el.classList.add('marked');
-      });
-
-      playSound(`${letter} ${num}`);
-    }, 3000);
-  }
-
-  function submitTransaction(method) {
-    alert(`Ebisaba byo ebya ${method} biweereddwaayo bulungi! Abalabirizi ba bot bajja kubitawulula.`);
-  }
-
-  function claimBingo() {
-    if (gameInterval) clearInterval(gameInterval);
-    if (timerInterval) clearInterval(timerInterval);
-    playSound("Bingo! You won 50 ETB!");
-    currentBalance += 50;
-    document.getElementById('walletBal').innerText = currentBalance + " ETB";
-    alert("🎉 BINGO Verified! Wawangudde ekitabo ky'omuzannyo wamu n'ekirabo kya 50 ETB!");
-    switchScreen('gamesScreen');
-  }
-
-  if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.ready();
-    window.Telegram.WebApp.expand();
-  }
+}
+function endGame() {
+  gameRunning=false; stopIntervals();
+  if("speechSynthesis" in window) window.speechSynthesis.cancel();
+  switchScreen("gamesScreen");
+}
+if(window.Telegram && window.Telegram.WebApp) { window.Telegram.WebApp.ready(); window.Telegram.WebApp.expand(); }
 </script>
 </body>
 </html>
